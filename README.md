@@ -1,4 +1,12 @@
 # 🧠 Assignment 14: Real-Time Multiplayer Live Quiz Battle (Socket.io)
+
+---
+
+## 🌐 Live Production Deployment on Render
+- **Live Production URL:** [https://assignment14-dyzn.onrender.com](https://assignment14-dyzn.onrender.com)
+- **Host Arena Dashboard:** [https://assignment14-dyzn.onrender.com/host.html](https://assignment14-dyzn.onrender.com/host.html)
+- **Player Mobile GamePad:** [https://assignment14-dyzn.onrender.com/player.html](https://assignment14-dyzn.onrender.com/player.html)
+
 > **Track:** Backend & Real-Time Web | **Level:** Advanced | **Estimated Time:** 7–9 Hours  
 > **Tech Stack:** Node.js, Express.js, Socket.io, In-Memory Game State Engine, CORS
 
