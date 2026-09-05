@@ -1,0 +1,42 @@
+[
+  {
+    "id": "q1",
+    "category": "Technology",
+    "question": "What is the primary engine behind the Node.js JavaScript runtime?",
+    "options": ["V8 Engine", "SpiderMonkey", "ChakraCore", "JavaScriptCore"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google Chrome's open-source high-performance V8 JavaScript engine."
+  },
+  {
+    "id": "q2",
+    "category": "Technology",
+    "question": "Which HTTP status code signifies that a client exceeded API rate limits?",
+    "options": ["401 Unauthorized", "403 Forbidden", "429 Too Many Requests", "503 Service Unavailable"],
+    "correctOption": 2,
+    "explanation": "HTTP status code 429 Too Many Requests indicates the client has sent too many requests in a given amount of time."
+  },
+  {
+    "id": "q3",
+    "category": "Technology",
+    "question": "In WebSocket / Socket.io architecture, what protocol handshake initiates the connection?",
+    "options": ["FTP Handshake", "HTTP Upgrade Handshake", "SMTP Handshake", "DNS Handshake"],
+    "correctOption": 1,
+    "explanation": "WebSockets start with a standard HTTP GET request containing an 'Upgrade: websocket' header."
+  },
+  {
+    "id": "q4",
+    "category": "Technology",
+    "question": "Which database model guarantees ACID transactions across distributed collections in MongoDB and Firestore?",
+    "options": ["Optimistic Replication", "Atomic Multi-Document Transactions", "Eventual Drift", "MapReduce"],
+    "correctOption": 1,
+    "explanation": "Atomic multi-document transactions ensure Atomicity, Consistency, Isolation, and Durability (ACID)."
+  },
+  {
+    "id": "q5",
+    "category": "Technology",
+    "question": "What is the time complexity of looking up a key in a Hash Map on average?",
+    "options": ["O(log N)", "O(N)", "O(1)", "O(N log N)"],
+    "correctOption": 2,
+    "explanation": "Hash tables provide O(1) constant time average complexity for search, insertion, and deletion."
+  }
+]

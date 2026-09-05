@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👑 Host Dashboard - QuizArena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="host-body">
+  <!-- Top Navigation -->
+  <header class="host-header">
+    <div class="logo-area">
+      <span>⚡</span>
+      <h2>QuizArena Host</h2>
+    </div>
+    <div class="host-status-badge" id="host-pin-display">
+      Room PIN: <span id="pin-val">----</span>
+    </div>
+  </header>
+
+  <main class="host-main-container">
+    <!-- View 1: Create Game / Lobby Setup -->
+    <section class="host-view" id="view-create">
+      <div class="create-box">
+        <h2>Host a Live Battle</h2>
+        <form id="form-create-game">
+          <div class="form-group">
+            <label>Host Name</label>
+            <input type="text" id="host-name" value="Professor X" required>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="host-category">
+              <option value="Technology">Technology & Web Development</option>
+              <option value="Science">General Science</option>
+              <option value="Pop Culture">Pop Culture</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-host btn-large">Generate Room PIN</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- View 2: Live Lobby Waiting Room -->
+    <section class="host-view hidden" id="view-lobby">
+      <div class="lobby-banner">
+        <div class="pin-callout">
+          <span>Join at: <strong>localhost:5000/player.html</strong></span>
+          <h1 class="big-pin" id="lobby-big-pin">8421</h1>
+        </div>
+        <button class="btn btn-start-game" id="btn-start-game">🚀 START GAME</button>
+      </div>
+
+      <div class="lobby-players-section">
+        <h3>Connected Competitors (<span id="lobby-count">0</span>)</h3>
+        <div class="players-grid" id="lobby-players-grid">
+          <!-- Live joined players appear here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- View 3: Live Question Projector Screen -->
+    <section class="host-view hidden" id="view-question">
+      <div class="question-header">
+        <span class="q-number" id="host-q-index">Question 1 / 5</span>
+        <div class="timer-circle" id="host-timer">15</div>
+        <span class="answered-badge" id="host-answered-count">0 answered</span>
+      </div>
+
+      <div class="question-box">
+        <h2 id="host-q-text">What is the primary engine behind Node.js?</h2>
+      </div>
+
+      <div class="options-grid" id="host-options-grid">
+        <div class="option-card opt-0" id="host-opt-0"><span class="shape">🔺</span> <span class="opt-text">Option A</span></div>
+        <div class="option-card opt-1" id="host-opt-1"><span class="shape">🔷</span> <span class="opt-text">Option B</span></div>
+        <div class="option-card opt-2" id="host-opt-2"><span class="shape">🟡</span> <span class="opt-text">Option C</span></div>
+        <div class="option-card opt-3" id="host-opt-3"><span class="shape">🟩</span> <span class="opt-text">Option D</span></div>
+      </div>
+    </section>
+
+    <!-- View 4: Question Result & Explanation Reveal -->
+    <section class="host-view hidden" id="view-reveal">
+      <div class="reveal-card">
+        <h3>Correct Answer:</h3>
+        <div class="correct-badge" id="reveal-correct-text">V8 Engine</div>
+        <p class="explanation-text" id="reveal-explanation">Node.js is built on Google Chrome's V8 engine.</p>
+        <span class="next-countdown">Next round in 4s...</span>
+      </div>
+    </section>
+
+    <!-- View 5: Live Leaderboard Screen -->
+    <section class="host-view hidden" id="view-leaderboard">
+      <h2 class="section-heading">🔥 Live Leaderboard</h2>
+      <div class="leaderboard-table-card">
+        <table class="leaderboard-table" id="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Player</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- View 6: Final Winner Podium -->
+    <section class="host-view hidden" id="view-winner">
+      <div class="winner-hero">
+        <div class="crown">👑</div>
+        <h1>CHAMPION!</h1>
+        <h2 class="winner-name" id="winner-name">Player Name</h2>
+        <div class="winner-score" id="winner-score">4,850 Points</div>
+        <a href="host.html" class="btn btn-host">Host Another Game</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+  <script>
+    initHostApp();
+  </script>
+</body>
+</html>
