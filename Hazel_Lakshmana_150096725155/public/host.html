@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Host</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="topbar"><a href="/">⚡ Quiz Battle</a><span>HOST DASHBOARD</span></header>
+
+    <section id="createPanel" class="card">
+      <h1>Create Quiz</h1>
+      <p class="muted">Create a room and share the 4-digit PIN with your players.</p>
+      <form id="createForm" class="form-grid">
+        <label>Host name<input id="hostName" required maxlength="30" placeholder="Professor X" /></label>
+        <label>Category<select id="category"><option>Tech</option><option>General</option><option>Science</option></select></label>
+        <button class="button primary" type="submit">Create Quiz</button>
+      </form>
+    </section>
+
+    <section id="hostGame" class="hidden">
+      <div class="card pin-card">
+        <span>GAME PIN</span><strong id="pin">----</strong><small id="roomStatus">Waiting for players...</small>
+      </div>
+      <div class="grid-two">
+        <section class="card">
+          <h2>Players <span id="playerCount" class="badge">0</span></h2>
+          <div id="players" class="player-list"></div>
+          <button id="startButton" class="button primary full" disabled>Start Game</button>
+        </section>
+        <section class="card" id="questionCard">
+          <div class="question-meta"><span id="questionNumber">Question 0/0</span><span id="timer">15</span></div>
+          <h2 id="questionText">Waiting for the host to start...</h2>
+          <div id="hostOptions" class="options"></div>
+          <p id="explanation" class="result"></p>
+        </section>
+      </div>
+      <section class="card">
+        <h2>Live Leaderboard</h2>
+        <div id="leaderboard" class="leaderboard"><p class="muted">Leaderboard appears after each round.</p></div>
+      </section>
+    </section>
+
+    <div id="toast" class="toast"></div>
+  </main>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
