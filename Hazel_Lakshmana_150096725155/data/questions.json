@@ -1,0 +1,58 @@
+[
+  {
+    "category": "Tech",
+    "question": "What is Node.js runtime based on?",
+    "options": ["V8", "SpiderMonkey", "Chakra", "JVM"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google's V8 JavaScript engine."
+  },
+  {
+    "category": "Tech",
+    "question": "Which protocol is used by Socket.io for real-time communication?",
+    "options": ["FTP", "WebSocket", "SMTP", "SSH"],
+    "correctOption": 1,
+    "explanation": "Socket.io uses WebSocket when available and provides fallbacks when needed."
+  },
+  {
+    "category": "Tech",
+    "question": "Which HTTP status code means Not Found?",
+    "options": ["200", "301", "404", "500"],
+    "correctOption": 2,
+    "explanation": "HTTP 404 indicates that the requested resource could not be found."
+  },
+  {
+    "category": "Tech",
+    "question": "Which JavaScript keyword declares a block-scoped variable that can be reassigned?",
+    "options": ["const", "let", "var", "static"],
+    "correctOption": 1,
+    "explanation": "let creates a block-scoped variable that can be reassigned."
+  },
+  {
+    "category": "General",
+    "question": "Which planet is known as the Red Planet?",
+    "options": ["Venus", "Mars", "Jupiter", "Mercury"],
+    "correctOption": 1,
+    "explanation": "Mars appears reddish because of iron oxide on its surface."
+  },
+  {
+    "category": "General",
+    "question": "How many continents are there?",
+    "options": ["5", "6", "7", "8"],
+    "correctOption": 2,
+    "explanation": "The commonly taught model recognizes seven continents."
+  },
+  {
+    "category": "Science",
+    "question": "What gas do plants primarily absorb during photosynthesis?",
+    "options": ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"],
+    "correctOption": 2,
+    "explanation": "Plants absorb carbon dioxide and use it to produce glucose during photosynthesis."
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for gold?",
+    "options": ["Ag", "Au", "Fe", "Gd"],
+    "correctOption": 1,
+    "explanation": "Au comes from the Latin word aurum, meaning gold."
+  }
+]
