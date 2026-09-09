@@ -1,0 +1,86 @@
+[
+  {
+    "id": 1,
+    "category": "JavaScript & Node.js",
+    "question": "What is the Node.js runtime engine built upon?",
+    "options": [
+      "Google Chrome V8 Engine",
+      "Mozilla SpiderMonkey",
+      "Microsoft Chakra",
+      "Java Virtual Machine (JVM)"
+    ],
+    "correctOption": 0,
+    "explanation": "Node.js runs on Google Chrome's high-performance V8 JavaScript engine.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 2,
+    "category": "Real-Time Web",
+    "question": "Which protocol does Socket.io fall back to if WebSockets are blocked by proxies?",
+    "options": [
+      "HTTP Long Polling",
+      "Server-Sent Events (SSE)",
+      "gRPC Streams",
+      "UDP Datagrams"
+    ],
+    "correctOption": 0,
+    "explanation": "Socket.io establishes initial connectivity via HTTP Long Polling before upgrading to WebSockets.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 3,
+    "category": "Node.js Architecture",
+    "question": "Which C++ library powers Node.js event loop and asynchronous I/O operations?",
+    "options": [
+      "libuv",
+      "libev",
+      "boost",
+      "v8-debug"
+    ],
+    "correctOption": 0,
+    "explanation": "libuv is the multi-platform C library that handles the event loop and thread pool in Node.js.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 4,
+    "category": "JavaScript Fundamentals",
+    "question": "What is the output of `typeof NaN` in JavaScript?",
+    "options": [
+      "\"number\"",
+      "\"undefined\"",
+      "\"NaN\"",
+      "\"object\""
+    ],
+    "correctOption": 0,
+    "explanation": "NaN stands for 'Not-a-Number', but its technical data type in JS is still 'number'.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 5,
+    "category": "Web APIs & Protocol",
+    "question": "What HTTP status code represents '401' vs '403'?",
+    "options": [
+      "401 is Unauthorized (Unauthenticated), 403 is Forbidden",
+      "401 is Forbidden, 403 is Unauthorized",
+      "401 is Not Found, 403 is Bad Request",
+      "401 is Internal Error, 403 is Service Unavailable"
+    ],
+    "correctOption": 0,
+    "explanation": "401 means credentials are missing/invalid, while 403 means authenticated user lacks permissions.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 6,
+    "category": "Backend Performance",
+    "question": "Which Node.js core module allows creating worker threads to execute CPU-intensive tasks?",
+    "options": [
+      "worker_threads",
+      "child_process",
+      "cluster",
+      "async_hooks"
+    ],
+    "correctOption": 0,
+    "explanation": "The `worker_threads` module enables isolated JavaScript execution threads sharing memory.",
+    "timeLimitSeconds": 15
+  }
+]

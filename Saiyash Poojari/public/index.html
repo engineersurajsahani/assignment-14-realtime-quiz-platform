@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Multiplayer Quiz Arena</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <div class="card text-center">
+      <h1>Real-Time Quiz Battle Arena</h1>
+      <p class="subtitle">Assignment 14 - Socket.io Live Quiz System</p>
+
+      <div class="nav-portal">
+        <div class="portal-box" onclick="window.location.href='host.html'">
+          <h2>Host View</h2>
+          <p>Create a room, get a PIN code, and control the quiz round.</p>
+          <button class="btn btn-blue">Open Host Portal</button>
+        </div>
+
+        <div class="portal-box" onclick="window.location.href='player.html'">
+          <h2>Player View</h2>
+          <p>Enter 4-digit PIN code and join as a quiz participant.</p>
+          <button class="btn btn-green">Open Player Gamepad</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

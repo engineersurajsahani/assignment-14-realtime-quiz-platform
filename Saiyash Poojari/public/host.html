@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Host Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <div id="setup-screen" class="card">
+      <h1>Quiz Host Control</h1>
+      <p class="subtitle">Create a room to start hosting</p>
+
+      <div class="form-group">
+        <label for="host-name">Host Name</label>
+        <input type="text" id="host-name" class="form-control" value="Quiz Master" placeholder="Enter name">
+      </div>
+
+      <div class="form-group">
+        <label for="quiz-category">Category</label>
+        <select id="quiz-category" class="form-control">
+          <option value="General Tech">General Tech</option>
+          <option value="JavaScript & Node.js">JavaScript & Node.js</option>
+          <option value="All Categories">All Categories</option>
+        </select>
+      </div>
+
+      <button id="btn-create-room" class="btn btn-blue mt-10">Create Quiz Room</button>
+    </div>
+
+    <div id="lobby-screen" class="card hidden">
+      <h1>Lobby Waiting Room</h1>
+      <p class="subtitle">Share this 4-digit PIN with players</p>
+
+      <div class="pin-banner">
+        <div>Game PIN:</div>
+        <div id="pin-display" class="pin-code">----</div>
+      </div>
+
+      <h3>Connected Players (<span id="player-count">0</span>)</h3>
+      <div id="player-list" class="player-list-container">
+        <div style="color: #64748b; font-size: 0.9rem;">Waiting for players...</div>
+      </div>
+
+      <button id="btn-start-game" class="btn btn-green mt-10" disabled>Start Game</button>
+    </div>
+
+    <div id="question-screen" class="card hidden">
+      <div class="q-header">
+        <span>Question <span id="q-curr">1</span> / <span id="q-total">5</span></span>
+        <div class="timer-box">Time: <span id="timer-seconds">15</span>s</div>
+      </div>
+
+      <h2 id="q-title" class="q-title">Loading Question...</h2>
+
+      <div id="options-container" class="options-grid"></div>
+
+      <div style="text-align: right; color: #64748b; font-size: 0.9rem;" class="mt-10">
+        Submissions: <strong id="answered-count">0</strong> / <strong id="total-room-players">0</strong>
+      </div>
+    </div>
+
+    <div id="leaderboard-screen" class="card hidden">
+      <h2>Round Results & Leaderboard</h2>
+      
+      <div class="explanation-box">
+        <strong>Correct Answer:</strong> <span id="correct-answer-text"></span><br>
+        <span id="explanation-text"></span>
+      </div>
+
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+
+      <button id="btn-next-q" class="btn btn-blue mt-10">Next Question -> </button>
+    </div>
+
+    <div id="ended-screen" class="card text-center hidden">
+      <h1>Quiz Finished!</h1>
+      <p class="subtitle">Final Winner</p>
+
+      <div id="winner-display" class="alert alert-success" style="font-size: 1.2rem; margin: 20px 0;">
+        Winner: <strong id="winner-name">Player</strong> (<span id="winner-score">0</span> pts)
+      </div>
+
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th>Final Rank</th>
+            <th>Player</th>
+            <th>Total Score</th>
+          </tr>
+        </thead>
+        <tbody id="final-leaderboard-body"></tbody>
+      </table>
+
+      <a href="index.html" class="btn btn-blue mt-10">Return to Home</a>
+    </div>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+  <script>
+    let currentPin = null;
+    let timerInterval = null;
+
+    const setupScreen = document.getElementById('setup-screen');
+    const lobbyScreen = document.getElementById('lobby-screen');
+    const questionScreen = document.getElementById('question-screen');
+    const leaderboardScreen = document.getElementById('leaderboard-screen');
+    const endedScreen = document.getElementById('ended-screen');
+
+    const btnCreateRoom = document.getElementById('btn-create-room');
+    const btnStartGame = document.getElementById('btn-start-game');
+    const btnNextQ = document.getElementById('btn-next-q');
+
+    const pinDisplay = document.getElementById('pin-display');
+    const playerCount = document.getElementById('player-count');
+    const playerList = document.getElementById('player-list');
+
+    btnCreateRoom.addEventListener('click', () => {
+      const hostName = document.getElementById('host-name').value.trim() || 'Quiz Master';
+      const category = document.getElementById('quiz-category').value;
+      socket.emit('quiz:create', { hostName, category });
+    });
+
+    socket.on('quiz:created', (data) => {
+      currentPin = data.pin;
+      pinDisplay.innerText = data.pin;
+      setupScreen.classList.add('hidden');
+      lobbyScreen.classList.remove('hidden');
+      showNotification(`Room created! PIN: ${data.pin}`, 'info');
+    });
+
+    socket.on('lobby:update', (data) => {
+      const players = data.players || [];
+      playerCount.innerText = players.length;
+
+      if (players.length === 0) {
+        playerList.innerHTML = `<div style="color: #64748b; font-size: 0.9rem;">Waiting for players...</div>`;
+        btnStartGame.disabled = true;
+      } else {
+        btnStartGame.disabled = false;
+        playerList.innerHTML = players.map(p => `
+          <div class="player-tag">${p.name}</div>
+        `).join('');
+      }
+    });
+
+    btnStartGame.addEventListener('click', () => {
+      if (currentPin) {
+        socket.emit('quiz:start', { pin: currentPin });
+      }
+    });
+
+    socket.on('question:start', (data) => {
+      lobbyScreen.classList.add('hidden');
+      leaderboardScreen.classList.add('hidden');
+      questionScreen.classList.remove('hidden');
+
+      document.getElementById('q-curr').innerText = data.questionIndex;
+      document.getElementById('q-total').innerText = data.totalQuestions;
+      document.getElementById('q-title').innerText = data.question;
+
+      const shapes = ['A', 'B', 'C', 'D'];
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = data.options.map((opt, i) => `
+        <div class="opt-btn opt-${i}" disabled>
+          <strong>${shapes[i]}:</strong> ${opt}
+        </div>
+      `).join('');
+
+      startTimerCountdown(data.timeLimitSeconds || 15);
+    });
+
+    function startTimerCountdown(seconds) {
+      if (timerInterval) clearInterval(timerInterval);
+      let timeRemaining = seconds;
+      const timerText = document.getElementById('timer-seconds');
+      timerText.innerText = timeRemaining;
+
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        if (timeRemaining < 0) {
+          clearInterval(timerInterval);
+          return;
+        }
+        timerText.innerText = timeRemaining;
+      }, 1000);
+    }
+
+    socket.on('answer:progress', (data) => {
+      document.getElementById('answered-count').innerText = data.answeredCount;
+      document.getElementById('total-room-players').innerText = data.totalPlayers;
+    });
+
+    socket.on('question:time_up', (data) => {
+      if (timerInterval) clearInterval(timerInterval);
+
+      const options = document.querySelectorAll('#options-container .opt-btn');
+      if (options[data.correctOption]) {
+        options[data.correctOption].classList.add('correct-answer');
+      }
+
+      document.getElementById('correct-answer-text').innerText = options[data.correctOption] ? options[data.correctOption].innerText : '';
+      document.getElementById('explanation-text').innerText = data.explanation || '';
+    });
+
+    socket.on('leaderboard:update', (data) => {
+      setTimeout(() => {
+        questionScreen.classList.add('hidden');
+        leaderboardScreen.classList.remove('hidden');
+
+        const tbody = document.getElementById('leaderboard-body');
+        tbody.innerHTML = (data.leaderboard || []).map((p, idx) => `
+          <tr>
+            <td>#${idx + 1}</td>
+            <td><strong>${p.name}</strong></td>
+            <td>${p.score} pts ${p.lastScoreAdded > 0 ? `(+${p.lastScoreAdded})` : ''}</td>
+          </tr>
+        `).join('');
+      }, 2000);
+    });
+
+    btnNextQ.addEventListener('click', () => {
+      if (currentPin) {
+        socket.emit('quiz:next_question', { pin: currentPin });
+      }
+    });
+
+    socket.on('quiz:ended', (data) => {
+      questionScreen.classList.add('hidden');
+      leaderboardScreen.classList.add('hidden');
+      endedScreen.classList.remove('hidden');
+
+      const winner = data.winner || { name: 'None', score: 0 };
+      document.getElementById('winner-name').innerText = winner.name;
+      document.getElementById('winner-score').innerText = winner.score;
+
+      const tbody = document.getElementById('final-leaderboard-body');
+      tbody.innerHTML = (data.finalRanks || []).map((p, idx) => `
+        <tr>
+          <td>#${idx + 1}</td>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.score} pts</td>
+        </tr>
+      `).join('');
+    });
+  </script>
+</body>
+</html>

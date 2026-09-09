@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Player View</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .gamepad-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .gamepad-btn {
+      height: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      border-radius: 8px;
+    }
+    .gamepad-symbol {
+      font-size: 1.8rem;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" style="max-width: 480px;">
+
+    <div id="join-screen" class="card text-center">
+      <h1>Join Quiz</h1>
+      <p class="subtitle">Enter PIN code and nickname</p>
+
+      <div class="form-group">
+        <label for="player-pin">4-Digit Game PIN</label>
+        <input type="text" id="player-pin" class="form-control pin-input" maxlength="4" placeholder="1234" inputmode="numeric">
+      </div>
+
+      <div class="form-group">
+        <label for="player-name">Your Name / Nickname</label>
+        <input type="text" id="player-name" class="form-control" placeholder="Enter nickname" style="text-align: center;">
+      </div>
+
+      <button id="btn-join" class="btn btn-green mt-10">Join Game</button>
+    </div>
+
+    <div id="lobby-wait-screen" class="card text-center hidden">
+      <div class="alert alert-success">
+        Successfully joined the room!
+      </div>
+      <h2>Welcome, <span id="display-name">Player</span>!</h2>
+      <p class="subtitle mt-10">Waiting for host to start...</p>
+      <p style="color: #64748b; font-size: 0.9rem;">Game PIN: <strong id="joined-pin">----</strong></p>
+    </div>
+
+    <div id="gamepad-screen" class="card hidden">
+      <div class="q-header">
+        <span>Question <span id="player-q-curr">1</span>/<span id="player-q-total">5</span></span>
+        <div class="timer-box">Time: <span id="player-timer">15</span>s</div>
+      </div>
+
+      <h3 id="player-q-title" style="text-align: center; margin-bottom: 12px;">Question text</h3>
+      <div style="text-align: right; font-weight: bold; color: #2563eb; margin-bottom: 12px;">Score: <span id="player-score">0</span></div>
+
+      <div class="gamepad-container" id="gamepad-buttons">
+        <button class="opt-btn opt-0 gamepad-btn" data-option="0">
+          <span class="gamepad-symbol">A</span>
+          <span class="opt-label">Option A</span>
+        </button>
+        <button class="opt-btn opt-1 gamepad-btn" data-option="1">
+          <span class="gamepad-symbol">B</span>
+          <span class="opt-label">Option B</span>
+        </button>
+        <button class="opt-btn opt-2 gamepad-btn" data-option="2">
+          <span class="gamepad-symbol">C</span>
+          <span class="opt-label">Option C</span>
+        </button>
+        <button class="opt-btn opt-3 gamepad-btn" data-option="3">
+          <span class="gamepad-symbol">D</span>
+          <span class="opt-label">Option D</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="submitted-screen" class="card text-center hidden">
+      <div class="alert alert-info">
+        Answer Submitted!
+      </div>
+      <p class="subtitle">Waiting for round time up...</p>
+    </div>
+
+    <div id="result-screen" class="card text-center hidden">
+      <h2 id="result-title">Round Finished</h2>
+      
+      <div id="result-points-box" class="alert alert-success mt-10">
+        +<span id="points-added">0</span> Points
+      </div>
+
+      <div class="mt-10">
+        <p>Current Rank: <strong id="current-rank">#1</strong></p>
+        <p>Total Score: <strong id="total-score-reveal" style="color: #2563eb;">0</strong> pts</p>
+      </div>
+    </div>
+
+    <div id="player-ended-screen" class="card text-center hidden">
+      <h1>Quiz Ended</h1>
+      
+      <div class="alert alert-info mt-10">
+        Your Final Rank: <strong id="final-rank-display">#1</strong>
+      </div>
+
+      <p class="subtitle mt-10">Total Score: <strong id="final-score-display" style="color: #2563eb;">0</strong> pts</p>
+
+      <a href="index.html" class="btn btn-blue mt-10">Return to Main Page</a>
+    </div>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+  <script>
+    let myPin = null;
+    let myName = null;
+    let myScore = 0;
+    let questionStartTime = null;
+    let timerInterval = null;
+
+    const joinScreen = document.getElementById('join-screen');
+    const lobbyWaitScreen = document.getElementById('lobby-wait-screen');
+    const gamepadScreen = document.getElementById('gamepad-screen');
+    const submittedScreen = document.getElementById('submitted-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const playerEndedScreen = document.getElementById('player-ended-screen');
+
+    const btnJoin = document.getElementById('btn-join');
+
+    btnJoin.addEventListener('click', () => {
+      const pin = document.getElementById('player-pin').value.trim();
+      const playerName = document.getElementById('player-name').value.trim();
+
+      if (!pin || pin.length !== 4) {
+        showNotification('Please enter a valid 4-digit PIN', 'error');
+        return;
+      }
+
+      if (!playerName) {
+        showNotification('Please enter your name', 'error');
+        return;
+      }
+
+      socket.emit('quiz:join', { pin, playerName }, (response) => {
+        if (response && response.success) {
+          myPin = response.pin;
+          myName = response.playerName;
+
+          document.getElementById('display-name').innerText = myName;
+          document.getElementById('joined-pin').innerText = myPin;
+
+          joinScreen.classList.add('hidden');
+          lobbyWaitScreen.classList.remove('hidden');
+        } else {
+          showNotification(response ? response.message : 'Error joining room', 'error');
+        }
+      });
+    });
+
+    socket.on('quiz:join_error', (data) => {
+      showNotification(data.message || 'Error joining room', 'error');
+    });
+
+    socket.on('question:start', (data) => {
+      questionStartTime = Date.now();
+
+      lobbyWaitScreen.classList.add('hidden');
+      submittedScreen.classList.add('hidden');
+      resultScreen.classList.add('hidden');
+      gamepadScreen.classList.remove('hidden');
+
+      document.getElementById('player-q-curr').innerText = data.questionIndex;
+      document.getElementById('player-q-total').innerText = data.totalQuestions;
+      document.getElementById('player-q-title').innerText = data.question;
+      document.getElementById('player-score').innerText = myScore;
+
+      const buttons = document.querySelectorAll('#gamepad-buttons .gamepad-btn');
+      buttons.forEach((btn, idx) => {
+        btn.disabled = false;
+        const labelSpan = btn.querySelector('.opt-label');
+        if (labelSpan && data.options[idx]) {
+          labelSpan.innerText = data.options[idx];
+        }
+      });
+
+      startPlayerTimer(data.timeLimitSeconds || 15);
+    });
+
+    function startPlayerTimer(seconds) {
+      if (timerInterval) clearInterval(timerInterval);
+      let timeRemaining = seconds;
+      const timerText = document.getElementById('player-timer');
+      timerText.innerText = timeRemaining;
+
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        if (timeRemaining < 0) {
+          clearInterval(timerInterval);
+          return;
+        }
+        timerText.innerText = timeRemaining;
+      }, 1000);
+    }
+
+    document.querySelectorAll('#gamepad-buttons .gamepad-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const optionIndex = parseInt(btn.getAttribute('data-option'), 10);
+        const timeTakenMs = Date.now() - questionStartTime;
+
+        document.querySelectorAll('#gamepad-buttons .gamepad-btn').forEach(b => b.disabled = true);
+
+        socket.emit('answer:submit', {
+          pin: myPin,
+          selectedOption: optionIndex,
+          timeTakenMs
+        });
+
+        gamepadScreen.classList.add('hidden');
+        submittedScreen.classList.remove('hidden');
+      });
+    });
+
+    socket.on('question:time_up', () => {
+      if (timerInterval) clearInterval(timerInterval);
+    });
+
+    socket.on('leaderboard:update', (data) => {
+      submittedScreen.classList.add('hidden');
+      gamepadScreen.classList.add('hidden');
+      resultScreen.classList.remove('hidden');
+
+      const leaderboard = data.leaderboard || [];
+      const myEntry = leaderboard.find(p => p.name === myName);
+
+      if (myEntry) {
+        myScore = myEntry.score;
+        const added = myEntry.lastScoreAdded || 0;
+        
+        document.getElementById('points-added').innerText = added;
+        document.getElementById('total-score-reveal').innerText = myScore;
+        document.getElementById('current-rank').innerText = `#${myEntry.rank}`;
+
+        const resultTitle = document.getElementById('result-title');
+        const pointsBox = document.getElementById('result-points-box');
+
+        if (added > 0) {
+          resultTitle.innerText = 'Correct Answer!';
+          pointsBox.className = 'alert alert-success mt-10';
+          pointsBox.innerText = `+${added} Points (Speed Bonus!)`;
+        } else {
+          resultTitle.innerText = 'Incorrect or Time Up!';
+          pointsBox.className = 'alert alert-error mt-10';
+          pointsBox.innerText = `+0 Points`;
+        }
+      }
+    });
+
+    socket.on('quiz:ended', (data) => {
+      resultScreen.classList.add('hidden');
+      submittedScreen.classList.add('hidden');
+      gamepadScreen.classList.add('hidden');
+      playerEndedScreen.classList.remove('hidden');
+
+      const finalRanks = data.finalRanks || [];
+      const myEntry = finalRanks.find(p => p.name === myName);
+
+      if (myEntry) {
+        document.getElementById('final-rank-display').innerText = `#${myEntry.rank}`;
+        document.getElementById('final-score-display').innerText = myEntry.score;
+      } else {
+        document.getElementById('final-rank-display').innerText = '-';
+        document.getElementById('final-score-display').innerText = myScore;
+      }
+    });
+  </script>
+</body>
+</html>
