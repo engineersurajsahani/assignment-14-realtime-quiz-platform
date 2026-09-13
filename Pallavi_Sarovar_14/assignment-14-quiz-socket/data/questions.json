@@ -1,0 +1,32 @@
+[
+  {
+    "question": "What is Node.js runtime based on?",
+    "options": ["V8", "SpiderMonkey", "Chakra", "JVM"],
+    "correctOption": 0,
+    "explanation": "Node.js uses Google's V8 JavaScript engine to execute JavaScript outside the browser."
+  },
+  {
+    "question": "Which protocol is Socket.io primarily used to enable?",
+    "options": ["Real-time bidirectional communication", "File compression", "Database indexing", "Image rendering"],
+    "correctOption": 0,
+    "explanation": "Socket.io provides real-time, bidirectional communication between clients and a server."
+  },
+  {
+    "question": "Which HTTP status code means 'Not Found'?",
+    "options": ["200", "301", "404", "500"],
+    "correctOption": 2,
+    "explanation": "HTTP 404 indicates that the requested resource could not be found."
+  },
+  {
+    "question": "Which JavaScript method converts JSON text into an object?",
+    "options": ["JSON.parse()", "JSON.stringify()", "Object.parse()", "JSON.object()"],
+    "correctOption": 0,
+    "explanation": "JSON.parse() parses JSON text and returns the corresponding JavaScript value."
+  },
+  {
+    "question": "What does CORS control in a web application?",
+    "options": ["Cross-origin access rules", "CPU scheduling", "Password hashing", "CSS layout"],
+    "correctOption": 0,
+    "explanation": "CORS controls whether browsers permit requests between different origins."
+  }
+]

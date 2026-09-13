@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quizy — Player</title><link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="player-page">
+  <header class="topbar"><a class="wordmark" href="/">QUIZY<span>.</span></a><div class="top-status"><span class="status-dot"></span> PLAYER MODE</div></header>
+  <main class="player-shell">
+    <section id="join" class="player-card glass-card">
+      <div class="logo-mark">Q<span>•</span></div><div class="eyebrow">PLAYER LOUNGE</div><h1>Jump into<br><em>the battle.</em></h1><p class="muted">Enter the PIN your host shared with you.</p>
+      <form id="joinForm"><input id="pinInput" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="8421" required /><input id="playerName" maxlength="24" placeholder="Your name" required /><button class="primary-btn" type="submit">Join Room <span>→</span></button></form><p id="joinError" class="error-text"></p>
+    </section>
+    <section id="waiting" class="hidden player-card glass-card center-card"><div class="eyebrow">YOU'RE IN</div><div class="big-pin" id="waitingPin">----</div><h1>Waiting for<br><em>the host.</em></h1><p class="muted">Keep this screen open. The next question will appear here.</p><div class="waiting-dots"><span></span><span></span><span></span></div><div class="roster-chip"><span id="waitingPlayer">Player</span><b id="waitingCount">1</b></div></section>
+    <section id="play" class="hidden">
+      <div class="player-top"><div><div class="eyebrow">ROUND <span id="playerRound">01 / 05</span></div><p id="playerStatus">Choose the best answer.</p></div><div class="score-chip"><span>SCORE</span><strong id="score">0</strong></div></div>
+      <div class="player-question glass-card"><div class="timer-line"><span id="playerTimerBar"></span></div><div class="timer-big"><span id="playerTimer">15</span><small>seconds</small></div><h1 id="playerQuestion">Loading…</h1><div id="answerGrid" class="answer-grid"></div></div>
+      <div id="answerFeedback" class="feedback hidden"></div>
+      <div class="player-rank glass-card"><div><span class="section-label">CURRENT RANK</span><strong id="currentRank">—</strong></div><div><span class="section-label">PLAYERS</span><strong id="totalPlayers">—</strong></div></div>
+    </section>
+    <section id="playerEnd" class="hidden player-card glass-card center-card"><div class="eyebrow">FINAL RESULT</div><div class="trophy">✦</div><h1>You finished<br><em>#<span id="myRank">—</span></em></h1><p class="muted">Final score</p><div class="final-score" id="myFinalScore">0</div><div id="playerFinalRanks" class="final-ranks"></div><a class="secondary-btn inline-btn" href="/">Leave Arena</a></section>
+  </main>
+  <div id="toast" class="toast"></div>
+  <script src="/socket.io/socket.io.js"></script><script src="/player.js"></script>
+</body>
+</html>

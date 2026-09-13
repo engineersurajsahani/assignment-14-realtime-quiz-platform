@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quizy — Host Studio</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar"><a class="wordmark" href="/">QUIZY<span>.</span></a><div class="top-status"><span class="status-dot"></span> LIVE SOCKET</div></header>
+  <main class="app-shell">
+    <section id="setup" class="setup-grid">
+      <div class="intro-block">
+        <div class="eyebrow">HOST STUDIO / 01</div>
+        <h1>Build the room.<br><em>Own the pace.</em></h1>
+        <p>Create a private quiz arena and share the four-digit PIN with your players.</p>
+        <div class="feature-row"><span>01</span><b>15s rounds</b><span>02</span><b>speed scoring</b><span>03</span><b>live ranks</b></div>
+      </div>
+      <form id="createForm" class="form-card glass-card">
+        <div class="section-label">QUIZ DETAILS</div>
+        <label>Your name<input id="hostName" maxlength="24" placeholder="Professor X" required /></label>
+        <label>Category<input id="category" maxlength="40" value="Tech" /></label>
+        <button class="primary-btn" type="submit">Create Quiz <span>↗</span></button>
+        <p id="setupError" class="error-text"></p>
+      </form>
+    </section>
+
+    <section id="lobby" class="hidden">
+      <div class="lobby-head">
+        <div><div class="eyebrow">HOST STUDIO / 02</div><h1>Your room is <em>ready.</em></h1></div>
+        <div class="pin-card"><span>JOIN PIN</span><strong id="pin">----</strong></div>
+      </div>
+      <div class="dashboard-grid">
+        <div class="room-preview gradient-card">
+          <div class="mini-label">INVITE A FRIEND</div>
+          <h2>Share this PIN<br><strong id="pinBig">----</strong></h2>
+          <p>Open Player View on another device or tab and enter the PIN.</p>
+          <button id="startBtn" class="light-btn">Start Game <span>→</span></button>
+        </div>
+        <div class="players-card glass-card">
+          <div class="card-head"><div><span class="section-label">PLAYERS</span><h2><span id="playerCount">0</span> in the room</h2></div><span class="live-pill">● WAITING</span></div>
+          <div id="players" class="player-list"></div>
+          <p id="emptyPlayers" class="empty-state">No players yet. Send the PIN to a friend.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="game" class="hidden">
+      <div class="game-head"><div><div class="eyebrow">LIVE ROUND</div><h1 id="questionCounter">QUESTION 01 / 05</h1></div><div class="timer-ring"><span id="timer">15</span><small>SEC</small></div></div>
+      <div class="host-game-grid">
+        <div class="question-stage gradient-card"><div class="mini-label">QUESTION</div><h2 id="questionText">Loading…</h2><div id="hostOptions" class="host-options"></div><div class="progress-track"><span id="progressBar"></span></div></div>
+        <aside class="leaderboard glass-card"><div class="card-head"><div><span class="section-label">LIVE RANKING</span><h2>Leaderboard</h2></div><span id="answeredPill" class="live-pill">0 ANSWERED</span></div><div id="leaderboard" class="rank-list"></div></aside>
+      </div>
+    </section>
+
+    <section id="end" class="hidden end-screen gradient-card"><div class="eyebrow">QUIZ COMPLETE</div><h1>And the winner is<br><em id="winnerName">—</em></h1><p id="winnerScore"></p><div id="finalRanks" class="final-ranks"></div><a class="light-btn inline-btn" href="/">Back to home ↗</a></section>
+  </main>
+  <div id="toast" class="toast"></div>
+  <script src="/socket.io/socket.io.js"></script><script src="/host.js"></script>
+</body>
+</html>

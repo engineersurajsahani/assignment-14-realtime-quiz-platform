@@ -1,145 +1,286 @@
-# 🧠 Assignment 14: Real-Time Multiplayer Live Quiz Battle (Socket.io)
-> **Track:** Backend & Real-Time Web | **Level:** Advanced | **Estimated Time:** 7–9 Hours  
-> **Tech Stack:** Node.js, Express.js, Socket.io, In-Memory Game State Engine, CORS
+# 🎯 Real-Time Multiplayer Live Quiz Battle
+
+A real-time multiplayer quiz application built with Node.js, Express.js, and Socket.io.
+
+Players can join a quiz room using a unique PIN, answer questions in real time, compete based on correctness and response speed, and see the leaderboard update after every question.
+
+The game is controlled by a server-side engine that manages rooms, timers, answers, scoring, and game progression.
 
 ---
 
-## 📌 1. Objective & Overview
+## 🚀 Live Demo
 
-Build a high-stakes, interactive **Real-Time Multiplayer Trivia & Quiz Battle Arena** (similar to Kahoot / Quizizz) using **Socket.io** and **Express.js**. In this project, students will architect an authoritative game server that manages synchronized question countdown clocks, evaluates player answer submissions with speed-based score bonuses, and broadcasts live dynamic leaderboards across all connected participants.
-
-### Key Learning Outcomes:
-- Managing asymmetric roles in real-time rooms: **Quiz Host / Admin** vs **Players**.
-- Synchronizing server-driven countdown timers and handling question transitions without client-side drift.
-- Designing anti-cheat server validation: answers submitted after timer expiry are rejected.
-- Calculating dynamic scoring algorithms based on answer correctness and millisecond response speed.
-- Sorting, updating, and broadcasting live leaderboard rankings after every question round.
+https://assignment-14-quiz-socket.onrender.com/
 
 ---
 
-## 🛠️ 2. Tech Stack & Dependencies
+## ✨ Features
 
-```bash
-# Initialize project
-npm init -y
-
-# Install dependencies
-npm install express socket.io cors dotenv
-
-# Install dev tools
-npm install -D nodemon
-```
-
----
-
-## 🎮 3. Game Flow & State Machine
-
-```
-[Host Creates Room (PIN)] 
-        ⬇
-[Players Join Lobby via PIN] 
-        ⬇
-[Host Clicks "Start Game"] 
-        ⬇
-[Server Broadcasts Question & Starts 15s Timer] 
-        ⬇
-[Players Submit Answers (Calculates Speed Score)] 
-        ⬇
-[Timer Expires ➔ Server Reveals Correct Answer & Broadcasts Live Leaderboard] 
-        ⬇
-[Next Question or Final Winner Screen]
-```
+- Real-time multiplayer quiz rooms
+- Host and Player roles
+- Unique 4-digit room PIN
+- Real-time lobby updates
+- Server-driven 15-second countdown
+- Synchronized questions for all players
+- Real-time answer submission
+- Server-side answer validation
+- Late-answer rejection
+- Duplicate-answer prevention
+- Speed-based scoring
+- Live leaderboard updates
+- Automatic question progression
+- Final winner announcement
+- Player connection and disconnection handling
+- In-memory game state management
+- Responsive user interface
 
 ---
 
-## 📡 4. Real-Time Socket Event Protocol
+## 🎮 How It Works
 
-### 🎪 Lobby & Game Control
+### Host
 
-| Event Name | Direction | Payload Schema | Description |
-|---|:---:|---|---|
-| `quiz:create` | `Host -> Server` | `{ "hostName": "Professor X", "category": "Tech" }` | Host initializes a quiz room, receives a 4-digit PIN |
-| `quiz:created` | `Server -> Host` | `{ "pin": "8421", "roomId": "quiz_8421" }` | Sends PIN to the host |
-| `quiz:join` | `Player -> Server` | `{ "pin": "8421", "playerName": "Karan" }` | Player enters lobby with PIN |
-| `lobby:update` | `Server -> Room` | `{ "players": [{ "name": "Karan", "score": 0 }] }` | Broadcasts lobby roster as players join |
-| `quiz:start` | `Host -> Server` | `{ "pin": "8421" }` | Host starts the quiz battle |
+1. Open the application.
+2. Create a quiz room.
+3. Share the generated room PIN with the players.
+4. Wait for players to join the lobby.
+5. Start the quiz.
 
-### ⏱️ Question Round & Live Gameplay
+### Players
 
-| Event Name | Direction | Payload Schema | Description |
-|---|:---:|---|---|
-| `question:start` | `Server -> Room` | `{ "questionIndex": 1, "totalQuestions": 5, "question": "What is Node.js runtime based on?", "options": ["V8", "SpiderMonkey", "Chakra", "JVM"], "timeLimitSeconds": 15 }` | Broadcasted by server. Omits correct answer to prevent cheating! |
-| `answer:submit` | `Player -> Server` | `{ "pin": "8421", "selectedOption": 0, "timeTakenMs": 3200 }` | Player submits chosen option |
-| `question:time_up` | `Server -> Room` | `{ "correctOption": 0, "explanation": "Node.js is built on Google Chrome's V8 engine." }` | Server reveals correct answer |
-| `leaderboard:update`| `Server -> Room` | `{ "leaderboard": [{ "rank": 1, "name": "Karan", "score": 1420 }] }` | Broadcasts sorted rankings |
-| `quiz:ended` | `Server -> Room` | `{ "winner": { "name": "Karan", "score": 4850 }, "finalRanks": [...] }` | Emitted after last question |
+1. Open the application.
+2. Enter the room PIN.
+3. Enter a player name.
+4. Join the lobby.
+5. Wait for the host to start the quiz.
+6. Answer each question before the timer expires.
+7. View the leaderboard after every question.
 
----
-
-## 🧮 5. Server-Side Scoring Algorithm
-
-```javascript
-// Score = Base (1000) * Speed Multiplier
-function calculateScore(isCorrect, timeTakenMs, totalTimeLimitMs = 15000) {
-  if (!isCorrect) return 0;
-  
-  const timeRemaining = Math.max(0, totalTimeLimitMs - timeTakenMs);
-  const speedBonus = Math.round((timeRemaining / totalTimeLimitMs) * 500); // Up to 500 bonus points
-  const baseScore = 500;
-  
-  return baseScore + speedBonus; // Total max 1000 points per question
-}
-```
+The server controls the game state and keeps all connected clients synchronized throughout the quiz.
 
 ---
 
-## 🏗️ 6. Directory Structure
+## 🏆 Scoring System
 
-```text
-assignment-14-quiz-socket/
-├── public/
-│   ├── index.html           # Host / Player entry portal
-│   ├── host.html            # Host control screen with live question display
-│   ├── player.html          # Mobile-friendly 4-color button answer grid
-│   └── app.js               # Socket handlers
-├── data/
-│   └── questions.json       # Question bank
-├── sockets/
-│   ├── gameEngine.js        # Timers, round transitions & leaderboard sorting
-│   └── lobbyHandler.js      # PIN generation & player joining
-├── server.js
-├── package.json
-└── README.md
-```
+Each question can award a maximum of 1000 points.
 
----
+### Correct Answer
 
-## 🧪 7. Testing & Verification Guide
+- Base Score: 500 points
+- Speed Bonus: Up to 500 points
+- Maximum Score: 1000 points
 
-1. Start the server on `http://localhost:5000`.
-2. Open Host View on Tab 1 (`http://localhost:5000/host.html`). Click **Create Quiz** and note the 4-digit PIN.
-3. Open Player View on Tab 2 and Tab 3 (`http://localhost:5000/player.html`). Enter PIN and join as "Player 1" and "Player 2".
-4. From the Host screen, click **Start Game**.
-5. Answer quickly on Player 1, and wait 10 seconds before answering on Player 2.
-6. Verify Player 1 receives a higher score due to faster response speed bonus.
-7. Verify neither player can submit an answer after the 15-second timer runs out.
+### Incorrect Answer
+
+- Score: 0 points
+
+The faster a player answers correctly, the higher their speed bonus.
+
+### Formula
+
+Time Remaining = Total Time Limit − Time Taken
+
+Speed Bonus = Round((Time Remaining / Total Time Limit) × 500)
+
+Final Score = Base Score + Speed Bonus
 
 ---
 
-## 📊 8. Grading Rubric (100 Marks)
+## 🛡️ Anti-Cheat
 
-| Evaluation Component | Marks |
-|---|:---:|
-| **Lobby & PIN-Based Multi-Player Room Management** | 25 |
-| **Server-Controlled Synchronous Question Clocks & Timers** | 25 |
-| **Speed-Based Dynamic Scoring & Anti-Cheat Validation** | 20 |
-| **Real-Time Leaderboard Sorting & Rank Calculation** | 15 |
-| **Dual Interface Polish (Host Dashboard & Player Game Pad)** | 15 |
-| **Total Marks** | **100** |
+The application performs validation on the server to maintain fair gameplay.
+
+- The server controls the question timer.
+- Response time is calculated using the server clock.
+- Answers submitted after the timer expires are rejected.
+- Players cannot submit multiple answers for the same question.
+- Correct answers are kept on the server and are not exposed when questions are sent to players.
+- Scores are calculated and validated on the server.
 
 ---
 
-## 📤 9. Submission Guidelines
+## 🔌 Socket.io Events
 
-- Submit your GitHub repository: `itm-assignment-14-quiz-socket`.
-- Include sample questions in `data/questions.json` and a brief video demo of a 3-player battle.
+| Event | Purpose |
+|---|---|
+| quiz:create | Create a new quiz room |
+| quiz:created | Return the generated room PIN |
+| quiz:join | Join an existing quiz room |
+| lobby:update | Update the room lobby |
+| quiz:start | Start the quiz |
+| question:start | Start and broadcast a question |
+| answer:submit | Submit a player's answer |
+| question:time_up | Notify clients that the timer has ended |
+| leaderboard:update | Broadcast updated scores |
+| quiz:ended | Announce final results |
+
+---
+
+## 🏗️ Project Structure
+
+Pallavi_Sarovar_14/
+
+└── assignment-14-quiz-socket/
+
+    ├── public/
+
+    │   ├── index.html
+
+    │   ├── host.html
+
+    │   ├── host.js
+
+    │   ├── player.html
+
+    │   ├── player.js
+
+    │   └── styles.css
+
+    ├── data/
+
+    │   └── questions.json
+
+    ├── docs/
+
+    │   ├── quiz.png
+
+    │   ├── quiz2.png
+
+    │   ├── quiz3.png
+
+    │   ├── quiz4.png
+
+    │   └── quiz5.png
+
+    ├── sockets/
+
+    │   ├── gameEngine.js
+
+    │   └── lobbyHandler.js
+
+    ├── server.js
+
+    ├── package.json
+
+    ├── package-lock.json
+
+    └── .gitignore
+
+---
+
+## ⚙️ Tech Stack
+
+### Backend
+
+- Node.js
+- Express.js
+- Socket.io
+- CORS
+
+### Frontend
+
+- HTML5
+- CSS3
+- JavaScript
+- Socket.io Client
+
+### Storage
+
+- In-memory game state
+- JSON-based question bank
+
+No external database is required.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js
+- npm
+
+### Installation
+
+Navigate to the project directory and install the dependencies.
+
+npm install
+
+### Environment Variables
+
+Create a .env file and configure the required environment variables.
+
+PORT=5000
+
+CLIENT_ORIGIN=http://localhost:5000
+
+### Run the Application
+
+Start the server:
+
+npm start
+
+For development:
+
+npm run dev
+
+The application will be available at:
+
+http://localhost:5000
+
+---
+
+## 🧪 Testing
+
+The application can be tested using multiple browser tabs or windows.
+
+### Multiplayer Test
+
+1. Open one tab as the Host.
+2. Create a quiz room.
+3. Open additional tabs as Players.
+4. Join using the generated room PIN.
+5. Start the quiz from the Host interface.
+6. Submit answers from the Player interfaces.
+7. Observe the synchronized timer and questions.
+8. Verify the leaderboard after each question.
+
+### Speed Scoring Test
+
+Have two players answer the same question correctly at different speeds.
+
+The player who answers faster should receive a higher score.
+
+### Anti-Cheat Test
+
+Wait until the 15-second timer expires and attempt to submit an answer.
+
+The server should reject the late submission.
+
+---
+
+
+## 📚 Learning Outcomes
+
+This project demonstrates:
+
+- Real-time communication using Socket.io
+- Multiplayer room management
+- Server-side game state management
+- Synchronized server timers
+- Real-time event broadcasting
+- Server-side validation
+- Anti-cheat implementation
+- Dynamic scoring
+- Speed-based scoring
+- Live leaderboard management
+- Client-server communication
+- Real-time game progression
+
+---
+
+## 📄 Assignment
+
+**Assignment 14 — Real-Time Multiplayer Live Quiz Battle**
+
+Built using Node.js, Express.js, and Socket.io as part of the Backend & Real-Time Web track.
