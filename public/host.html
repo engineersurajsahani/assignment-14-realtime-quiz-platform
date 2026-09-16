@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Host - Quiz Battle</title>
+<style>
+  body { font-family: system-ui; background: #1e1e2f; color: #fff; padding: 30px; }
+  #pin { font-size: 48px; letter-spacing: 8px; margin: 20px 0; }
+  button { padding: 12px 24px; background: #4c5fd7; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 6px; }
+  .player-chip { display: inline-block; background: #2a2a3d; padding: 8px 14px; border-radius: 20px; margin: 4px; }
+  #question { font-size: 24px; margin: 20px 0; }
+  .option { background: #2a2a3d; padding: 12px; border-radius: 8px; margin: 6px 0; }
+  .option.correct { background: #2e7d32; }
+  #leaderboard div { padding: 6px 0; }
+</style>
+</head>
+<body>
+  <h1>Host Dashboard</h1>
+  <div id="setup">
+    <input id="hostName" placeholder="Your name" />
+    <input id="category" placeholder="Category (e.g. Tech)" />
+    <button id="createBtn">Create Quiz</button>
+  </div>
+
+  <div id="lobby" style="display:none">
+    <p>Share this PIN:</p>
+    <div id="pin"></div>
+    <div id="players"></div>
+    <button id="startBtn">Start Game</button>
+  </div>
+
+  <div id="gameArea" style="display:none">
+    <div id="question"></div>
+    <div id="options"></div>
+    <div id="timer"></div>
+    <h3>Leaderboard</h3>
+    <div id="leaderboard"></div>
+  </div>
+
+  <div id="endScreen" style="display:none">
+    <h2>🏆 Winner: <span id="winnerName"></span></h2>
+    <div id="finalRanks"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let pin;
+
+    document.getElementById('createBtn').onclick = () => {
+      const hostName = document.getElementById('hostName').value || 'Host';
+      const category = document.getElementById('category').value || 'General';
+      socket.emit('quiz:create', { hostName, category });
+    };
+
+    socket.on('quiz:created', (data) => {
+      pin = data.pin;
+      document.getElementById('pin').textContent = pin;
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('lobby').style.display = 'block';
+    });
+
+    socket.on('lobby:update', ({ players }) => {
+      document.getElementById('players').innerHTML = players
+        .map(p => `<span class="player-chip">${p.name}</span>`).join('');
+    });
+
+    document.getElementById('startBtn').onclick = () => {
+      socket.emit('quiz:start', { pin });
+      document.getElementById('lobby').style.display = 'none';
+      document.getElementById('gameArea').style.display = 'block';
+    };
+
+    socket.on('question:start', ({ questionIndex, totalQuestions, question, options, timeLimitSeconds }) => {
+      document.getElementById('question').textContent = `Q${questionIndex}/${totalQuestions}: ${question}`;
+      document.getElementById('options').innerHTML = options
+        .map((o, i) => `<div class="option" data-i="${i}">${o}</div>`).join('');
+
+      let remaining = timeLimitSeconds;
+      document.getElementById('timer').textContent = `⏱ ${remaining}s`;
+      const interval = setInterval(() => {
+        remaining -= 1;
+        document.getElementById('timer').textContent = `⏱ ${remaining}s`;
+        if (remaining <= 0) clearInterval(interval);
+      }, 1000);
+    });
+
+    socket.on('question:time_up', ({ correctOption, explanation }) => {
+      document.querySelectorAll('.option').forEach(el => {
+        if (parseInt(el.dataset.i) === correctOption) el.classList.add('correct');
+      });
+    });
+
+    socket.on('leaderboard:update', ({ leaderboard }) => {
+      document.getElementById('leaderboard').innerHTML = leaderboard
+        .map(p => `<div>#${p.rank} ${p.name} — ${p.score}</div>`).join('');
+    });
+
+    socket.on('quiz:ended', ({ winner, finalRanks }) => {
+      document.getElementById('gameArea').style.display = 'none';
+      document.getElementById('endScreen').style.display = 'block';
+      document.getElementById('winnerName').textContent = winner ? winner.name : 'N/A';
+      document.getElementById('finalRanks').innerHTML = finalRanks
+        .map(p => `<div>#${p.rank} ${p.name} — ${p.score}</div>`).join('');
+    });
+  </script>
+</body>
+</html>
