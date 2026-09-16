@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Player - Quiz Battle</title>
+<style>
+  body { font-family: system-ui; background: #1e1e2f; color: #fff; padding: 20px; }
+  input, button { padding: 12px; font-size: 16px; border-radius: 8px; border: none; margin: 6px 0; width: 100%; box-sizing: border-box; }
+  button { background: #4c5fd7; color: #fff; cursor: pointer; }
+  #question { font-size: 20px; margin: 16px 0; }
+  .answer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .answer-btn { padding: 24px; font-size: 18px; border-radius: 10px; border: none; cursor: pointer; color: #fff; }
+  .answer-btn:nth-child(1) { background: #e21b3c; }
+  .answer-btn:nth-child(2) { background: #1368ce; }
+  .answer-btn:nth-child(3) { background: #d89e00; }
+  .answer-btn:nth-child(4) { background: #26890c; }
+  .answer-btn:disabled { opacity: 0.4; }
+  #score { font-size: 22px; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div id="joinArea">
+    <h2>Join Quiz</h2>
+    <input id="pinInput" placeholder="Enter PIN" maxlength="4" />
+    <input id="nameInput" placeholder="Your name" />
+    <button id="joinBtn">Join</button>
+  </div>
+
+  <div id="waitArea" style="display:none">
+    <p>Waiting for host to start the game...</p>
+  </div>
+
+  <div id="gameArea" style="display:none">
+    <div id="question"></div>
+    <div class="answer-grid" id="options"></div>
+    <div id="feedback"></div>
+    <div id="score">Score: 0</div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let pin, myScore = 0, questionStartTime;
+
+    document.getElementById('joinBtn').onclick = () => {
+      pin = document.getElementById('pinInput').value.trim();
+      const playerName = document.getElementById('nameInput').value || 'Player';
+      socket.emit('quiz:join', { pin, playerName });
+      document.getElementById('joinArea').style.display = 'none';
+      document.getElementById('waitArea').style.display = 'block';
+    };
+
+    socket.on('quiz:error', ({ message }) => alert(message));
+
+    socket.on('question:start', ({ options }) => {
+      document.getElementById('waitArea').style.display = 'none';
+      document.getElementById('gameArea').style.display = 'block';
+      document.getElementById('feedback').textContent = '';
+      questionStartTime = Date.now();
+
+      document.getElementById('options').innerHTML = options
+        .map((o, i) => `<button class="answer-btn" data-i="${i}">${o}</button>`).join('');
+
+      document.querySelectorAll('.answer-btn').forEach(btn => {
+        btn.onclick = () => {
+          const selectedOption = parseInt(btn.dataset.i);
+          const timeTakenMs = Date.now() - questionStartTime;
+          socket.emit('answer:submit', { pin, selectedOption, timeTakenMs });
+          document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+        };
+      });
+    });
+
+    socket.on('question:time_up', ({ correctOption }) => {
+      document.getElementById('feedback').textContent = `Correct answer was option ${correctOption + 1}`;
+    });
+
+    socket.on('leaderboard:update', ({ leaderboard }) => {
+      const me = leaderboard.find(p => p.name === document.getElementById('nameInput').value);
+      if (me) {
+        myScore = me.score;
+        document.getElementById('score').textContent = `Score: ${myScore}`;
+      }
+    });
+
+    socket.on('quiz:ended', ({ winner }) => {
+      document.getElementById('gameArea').innerHTML = `<h2>Game Over! Winner: ${winner ? winner.name : 'N/A'}</h2><p>Your final score: ${myScore}</p>`;
+    });
+  </script>
+</body>
+</html>

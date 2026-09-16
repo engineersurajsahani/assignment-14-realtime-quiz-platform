@@ -1,0 +1,32 @@
+[
+  {
+    "question": "What is Node.js runtime based on?",
+    "options": ["V8", "SpiderMonkey", "Chakra", "JVM"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google Chrome's V8 engine."
+  },
+  {
+    "question": "Which HTTP method is idempotent?",
+    "options": ["POST", "PUT", "PATCH", "CONNECT"],
+    "correctOption": 1,
+    "explanation": "PUT is idempotent — repeating it produces the same result."
+  },
+  {
+    "question": "What does REST stand for?",
+    "options": ["Real-time State Transfer", "Representational State Transfer", "Remote State Transmission", "Resource State Transfer"],
+    "correctOption": 1,
+    "explanation": "REST = Representational State Transfer."
+  },
+  {
+    "question": "Which database is document-oriented?",
+    "options": ["MySQL", "PostgreSQL", "MongoDB", "SQLite"],
+    "correctOption": 2,
+    "explanation": "MongoDB stores data as JSON-like documents."
+  },
+  {
+    "question": "What port does HTTPS use by default?",
+    "options": ["80", "8080", "443", "21"],
+    "correctOption": 2,
+    "explanation": "HTTPS uses port 443 by default."
+  }
+]
