@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player Arena Gamepad | Real-Time Quiz</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="app-container" style="max-width: 680px;">
+    <!-- Header -->
+    <header class="brand-header">
+      <a href="index.html" class="brand-logo">
+        <div class="logo-badge">📱</div>
+        <div class="brand-title">PLAYER GAMEPAD</div>
+      </a>
+      <div id="playerStatusBadge" class="brand-tag">DISCONNECTED</div>
+    </header>
+
+    <!-- 1. JOIN FORM (Fallback if not joining via index portal) -->
+    <main id="playerJoinSection" class="classy-card hidden">
+      <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 8px;">Enter Quiz Room</h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Provide the 4-digit PIN displayed on the host screen.</p>
+      
+      <div class="form-group mb-4">
+        <label class="form-label" for="manualPin">Room PIN</label>
+        <input type="text" id="manualPin" class="input-field input-pin" placeholder="0000" maxlength="4">
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label" for="manualName">Your Nickname</label>
+        <input type="text" id="manualName" class="input-field" placeholder="e.g. Karan" maxlength="15">
+      </div>
+      <button id="manualJoinBtn" class="btn btn-primary btn-full">Join Game</button>
+      <div id="manualError" class="text-center mt-4 hidden" style="color: #f87171; font-size: 0.9rem;"></div>
+    </main>
+
+    <!-- 2. LOBBY WAITING SCREEN -->
+    <main id="playerLobbySection" class="classy-card hidden text-center">
+      <div style="font-size: 3rem; margin-bottom: 12px;">⚡</div>
+      <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 6px;">You are in the Arena!</h2>
+      <p style="color: var(--text-muted); font-size: 1rem;">Waiting for host to start the battle...</p>
+
+      <div class="mt-6" style="padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: inline-flex; align-items: center; gap: 16px;">
+        <div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Player</span>
+          <div id="lobbyPlayerName" style="font-size: 1.2rem; font-weight: 700;">Player</div>
+        </div>
+        <div style="width: 1px; height: 30px; background: var(--border-strong);"></div>
+        <div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Room PIN</span>
+          <div id="lobbyPinDisplay" style="font-family: var(--font-mono); font-size: 1.2rem; font-weight: 700; letter-spacing: 2px;">----</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 3. LIVE QUESTION & 4-COLOR GAMEPAD -->
+    <main id="playerQuestionSection" class="classy-card hidden">
+      <div class="game-meta-bar">
+        <span id="playerQuestionCounter" class="q-counter">Question 1 of 5</span>
+        <div class="timer-container">
+          <span>TIMER</span>
+          <div id="playerTimerClock" class="timer-clock">15s</div>
+        </div>
+      </div>
+
+      <!-- Timer Bar -->
+      <div class="timer-bar-wrap">
+        <div id="playerTimerBar" class="timer-bar"></div>
+      </div>
+
+      <!-- Question Text -->
+      <div class="question-text-box">
+        <h2 id="playerQuestionText" class="question-text" style="font-size: 1.35rem;">Question title here</h2>
+      </div>
+
+      <!-- 4 High-Contrast Monochrome Answer Options Grid -->
+      <div class="answers-grid" id="playerOptionsGrid">
+        <button class="option-btn opt-0" data-index="0">
+          <div class="option-shape">▲</div>
+          <span class="opt-text">Option 1</span>
+        </button>
+        <button class="option-btn opt-1" data-index="1">
+          <div class="option-shape">◆</div>
+          <span class="opt-text">Option 2</span>
+        </button>
+        <button class="option-btn opt-2" data-index="2">
+          <div class="option-shape">●</div>
+          <span class="opt-text">Option 3</span>
+        </button>
+        <button class="option-btn opt-3" data-index="3">
+          <div class="option-shape">■</div>
+          <span class="opt-text">Option 4</span>
+        </button>
+      </div>
+
+      <!-- Answer Submitted Confirmation State -->
+      <div id="playerLockedStatus" class="mt-6 text-center hidden" style="padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-strong);">
+        <span style="font-weight: 700; color: var(--accent-white);">✓ Answer Locked In!</span>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Evaluating speed bonus at round end...</div>
+      </div>
+    </main>
+
+    <!-- 4. ROUND REVIEW / FEEDBACK -->
+    <main id="playerReviewSection" class="classy-card hidden">
+      <div id="playerFeedbackBanner" class="feedback-banner">
+        <div id="playerFeedbackTitle" class="feedback-title">Correct!</div>
+        <div id="playerFeedbackSub" class="feedback-sub">+920 Points (Speed Bonus Included)</div>
+        <div id="playerScoreBadge" class="score-badge">Total Score: 920</div>
+      </div>
+
+      <div class="mt-6" style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Explanation</span>
+        <p id="playerExplanationText" style="font-size: 0.95rem; margin-top: 6px; line-height: 1.5;"></p>
+      </div>
+
+      <!-- Current Leaderboard Position -->
+      <div class="mt-6">
+        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 10px;">Leaderboard</h3>
+        <table class="leaderboard-table">
+          <tbody id="playerLeaderboardBody">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- 5. FINAL WINNER SCREEN -->
+    <main id="playerEndedSection" class="classy-card hidden text-center">
+      <div class="winner-podium">
+        <div class="trophy-icon">🏆</div>
+        <span class="brand-tag">TOURNAMENT COMPLETE</span>
+        <h2 id="playerFinalWinner" class="winner-name">Winner Name</h2>
+        <div id="playerFinalScore" class="winner-score">0 Points</div>
+        <div id="playerOwnResult" style="margin-top: 10px; font-weight: 700; color: var(--accent-white);"></div>
+      </div>
+
+      <div class="mt-6">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">Final Leaderboard</h3>
+        <table class="leaderboard-table">
+          <tbody id="playerFinalLeaderboardBody">
+            <!-- Final rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-6">
+        <a href="index.html" class="btn btn-primary btn-full">Join Another Game</a>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
