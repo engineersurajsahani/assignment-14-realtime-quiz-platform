@@ -1,0 +1,38 @@
+[
+  {
+    "question": "What is the primary JavaScript runtime engine used in Node.js?",
+    "options": ["Google V8", "Mozilla SpiderMonkey", "Microsoft Chakra", "Java Virtual Machine (JVM)"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google Chrome's open-source high-performance V8 JavaScript engine."
+  },
+  {
+    "question": "Which protocol does Socket.io primarily upgrade to for bi-directional communication?",
+    "options": ["HTTP/2", "WebSocket", "gRPC", "MQTT"],
+    "correctOption": 1,
+    "explanation": "Socket.io establishes a WebSocket connection whenever possible for low-latency, full-duplex communication."
+  },
+  {
+    "question": "In standard HTTP status codes, what does 429 indicate?",
+    "options": ["Unauthorized", "Payment Required", "Too Many Requests", "Internal Server Error"],
+    "correctOption": 2,
+    "explanation": "HTTP status 429 indicates that the user has sent too many requests in a given amount of time (Rate Limiting)."
+  },
+  {
+    "question": "Which data structure operates on a Last-In, First-Out (LIFO) principle?",
+    "options": ["Queue", "Stack", "Binary Tree", "Linked List"],
+    "correctOption": 1,
+    "explanation": "A Stack operates on LIFO, where the last element added is the first one removed."
+  },
+  {
+    "question": "What is the average time complexity of a lookup in a well-distributed Hash Table?",
+    "options": ["O(log n)", "O(n)", "O(1)", "O(n log n)"],
+    "correctOption": 2,
+    "explanation": "Hash tables provide O(1) constant average time complexity for key lookups."
+  },
+  {
+    "question": "In React and modern frontends, what is the term for lifting state to the nearest common ancestor?",
+    "options": ["State Hydration", "State Hoisting / Lifting State Up", "Prop Drilling", "Memoization"],
+    "correctOption": 1,
+    "explanation": "Lifting state up involves moving shared state to the closest common ancestor component."
+  }
+]

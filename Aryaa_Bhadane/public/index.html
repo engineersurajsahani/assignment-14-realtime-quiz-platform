@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Quiz Arena | Monochrome Edition</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="brand-header">
+      <a href="index.html" class="brand-logo">
+        <div class="logo-badge">Q</div>
+        <div class="brand-title">QUIZ ARENA</div>
+      </a>
+      <span class="brand-tag">Realtime PvP</span>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h1 class="hero-title">High-Stakes Live Trivia</h1>
+      <p class="hero-subtitle">Experience lightning-fast multiplayer quiz battles powered by an authoritative real-time engine and speed-based scoring.</p>
+    </section>
+
+    <!-- Mode Selector Cards -->
+    <div class="portal-grid">
+      <!-- Player Portal Card -->
+      <div class="portal-box" id="playerChoiceBox">
+        <div class="portal-icon">📱</div>
+        <div>
+          <h2 class="portal-name">Join as Player</h2>
+          <p class="portal-desc">Enter a room PIN to compete on the live leaderboard and earn speed bonuses.</p>
+        </div>
+        <div class="form-group mt-4" style="width: 100%;">
+          <label class="form-label" for="joinPin">Room PIN</label>
+          <input type="text" id="joinPin" class="input-field input-pin" placeholder="0000" maxlength="4" autocomplete="off">
+        </div>
+        <div class="form-group" style="width: 100%;">
+          <label class="form-label" for="joinName">Player Nickname</label>
+          <input type="text" id="joinName" class="input-field" placeholder="e.g. Karan" maxlength="15" autocomplete="off">
+        </div>
+        <button id="joinBtn" class="btn btn-primary btn-full mt-4">Enter Arena</button>
+        <div id="joinError" class="text-center mt-4 hidden" style="color: #f87171; font-size: 0.9rem;"></div>
+      </div>
+
+      <!-- Host Portal Card -->
+      <div class="portal-box" id="hostChoiceBox">
+        <div class="portal-icon">👑</div>
+        <div>
+          <h2 class="portal-name">Host a Quiz</h2>
+          <p class="portal-desc">Launch an authoritative quiz session, control game pacing, and broadcast live rankings.</p>
+        </div>
+        <div class="form-group mt-4" style="width: 100%;">
+          <label class="form-label" for="hostName">Host Name</label>
+          <input type="text" id="hostName" class="input-field" placeholder="e.g. Professor X" value="Quiz Master" maxlength="20">
+        </div>
+        <div class="form-group" style="width: 100%;">
+          <label class="form-label" for="quizCategory">Category</label>
+          <input type="text" id="quizCategory" class="input-field" placeholder="e.g. Tech & Web Architecture" value="Tech & Web Architecture">
+        </div>
+        <a href="host.html" id="createHostBtn" class="btn btn-secondary btn-full mt-4">Create Quiz Lobby</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Inline quick handlers for index portal
+    const joinBtn = document.getElementById('joinBtn');
+    const joinPin = document.getElementById('joinPin');
+    const joinName = document.getElementById('joinName');
+    const joinError = document.getElementById('joinError');
+    const createHostBtn = document.getElementById('createHostBtn');
+    const hostName = document.getElementById('hostName');
+    const quizCategory = document.getElementById('quizCategory');
+
+    joinBtn.addEventListener('click', () => {
+      const pin = joinPin.value.trim();
+      const name = joinName.value.trim();
+      if (!pin || pin.length < 4) {
+        joinError.textContent = 'Please enter a valid 4-digit room PIN.';
+        joinError.classList.remove('hidden');
+        return;
+      }
+      if (!name) {
+        joinError.textContent = 'Please enter a player nickname.';
+        joinError.classList.remove('hidden');
+        return;
+      }
+      // Redirect to player page with URL parameters for instant connection
+      window.location.href = `player.html?pin=${encodeURIComponent(pin)}&name=${encodeURIComponent(name)}`;
+    });
+
+    createHostBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const hName = hostName.value.trim() || 'Quiz Master';
+      const cat = quizCategory.value.trim() || 'Tech';
+      window.location.href = `host.html?hostName=${encodeURIComponent(hName)}&category=${encodeURIComponent(cat)}`;
+    });
+  </script>
+</body>
+</html>

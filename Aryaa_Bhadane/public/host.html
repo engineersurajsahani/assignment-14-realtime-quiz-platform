@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Host Arena Dashboard | Real-Time Quiz</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="brand-header">
+      <a href="index.html" class="brand-logo">
+        <div class="logo-badge">👑</div>
+        <div class="brand-title">HOST COMMAND CENTER</div>
+      </a>
+      <div id="hostCategoryBadge" class="brand-tag">LOBBY</div>
+    </header>
+
+    <!-- 1. HOST LOBBY STAGE -->
+    <main id="hostLobbySection" class="classy-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+          <h2 style="font-size: 1.6rem; font-weight: 800;">Lobby Waiting Room</h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Ask players to go to the portal and enter the PIN below.</p>
+        </div>
+        <div id="hostNameLabel" class="brand-tag">Host: Initializing...</div>
+      </div>
+
+      <!-- PIN Display Card -->
+      <div class="pin-display-card">
+        <span class="pin-label">Game Room PIN</span>
+        <div id="displayPin" class="pin-number">----</div>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Share this 4-digit code with your players</span>
+      </div>
+
+      <!-- Player Roster -->
+      <div class="mt-6">
+        <div class="roster-header">
+          <h3 style="font-size: 1.1rem; font-weight: 700;">Connected Players</h3>
+          <span id="playerCount" class="roster-count">0 Players Joined</span>
+        </div>
+        <div id="rosterList" class="roster-grid">
+          <span id="emptyRosterMsg" style="color: var(--text-dim); font-size: 0.95rem; margin: auto;">
+            Waiting for competitors to join...
+          </span>
+        </div>
+      </div>
+
+      <!-- Start Game Control -->
+      <div class="mt-6" style="display: flex; gap: 12px;">
+        <button id="startGameBtn" class="btn btn-primary btn-full" style="padding: 18px;" disabled>
+          Start Game
+        </button>
+      </div>
+    </main>
+
+    <!-- 2. ACTIVE QUESTION STAGE -->
+    <main id="hostQuestionSection" class="classy-card hidden">
+      <div class="game-meta-bar">
+        <span id="hostQuestionCounter" class="q-counter">Question 1 of 5</span>
+        <div class="timer-container">
+          <span>TIME REMAINING</span>
+          <div id="hostTimerClock" class="timer-clock">15s</div>
+        </div>
+      </div>
+
+      <!-- Timer Progress Bar -->
+      <div class="timer-bar-wrap">
+        <div id="hostTimerBar" class="timer-bar"></div>
+      </div>
+
+      <!-- Question Text -->
+      <div class="question-text-box">
+        <h2 id="hostQuestionText" class="question-text">Loading question...</h2>
+      </div>
+
+      <!-- Answers Display -->
+      <div class="answers-grid" id="hostOptionsGrid">
+        <div class="option-btn opt-0">
+          <div class="option-shape">▲</div>
+          <span class="opt-text">Option 1</span>
+        </div>
+        <div class="option-btn opt-1">
+          <div class="option-shape">◆</div>
+          <span class="opt-text">Option 2</span>
+        </div>
+        <div class="option-btn opt-2">
+          <div class="option-shape">●</div>
+          <span class="opt-text">Option 3</span>
+        </div>
+        <div class="option-btn opt-3">
+          <div class="option-shape">■</div>
+          <span class="opt-text">Option 4</span>
+        </div>
+      </div>
+
+      <!-- Live Answer Submissions Status -->
+      <div class="mt-6" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <span style="font-size: 0.9rem; color: var(--text-muted);">Real-Time Submissions</span>
+        <span id="hostSubmissionCounter" style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-white);">0 / 0 Answered</span>
+      </div>
+    </main>
+
+    <!-- 3. ROUND REVIEW & LEADERBOARD STAGE -->
+    <main id="hostReviewSection" class="classy-card hidden">
+      <div class="game-meta-bar">
+        <span style="font-weight: 700; color: var(--accent-white);">ROUND COMPLETED</span>
+        <span id="nextRoundCountdown" style="color: var(--text-muted); font-size: 0.9rem;">Next question in 5s...</span>
+      </div>
+
+      <div class="feedback-banner correct mt-4">
+        <div class="feedback-title" id="revealedAnswerText">Correct Answer: Option 1</div>
+        <div class="feedback-sub" id="revealedExplanationText">Explanation details...</div>
+      </div>
+
+      <!-- Dynamic Leaderboard Table -->
+      <div class="mt-6">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 12px;">Live Standings</h3>
+        <table class="leaderboard-table">
+          <tbody id="hostLeaderboardBody">
+            <!-- Dynamic Leaderboard Rows -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- 4. FINAL WINNER STAGE -->
+    <main id="hostEndedSection" class="classy-card hidden">
+      <div class="winner-podium">
+        <div class="trophy-icon">🏆</div>
+        <span class="brand-tag">ARENA CHAMPION</span>
+        <h1 id="winnerName" class="winner-name">Player Name</h1>
+        <div id="winnerScore" class="winner-score">0 Points</div>
+      </div>
+
+      <!-- Final Leaderboard Table -->
+      <div class="mt-6">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 12px; text-align: center;">Final Rankings</h3>
+        <table class="leaderboard-table">
+          <tbody id="hostFinalLeaderboardBody">
+            <!-- Final Leaderboard Rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-6 text-center">
+        <a href="index.html" class="btn btn-primary" style="padding: 16px 32px;">Host Another Match</a>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
