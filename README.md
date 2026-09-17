@@ -1,145 +1,86 @@
-# 🧠 Assignment 14: Real-Time Multiplayer Live Quiz Battle (Socket.io)
-> **Track:** Backend & Real-Time Web | **Level:** Advanced | **Estimated Time:** 7–9 Hours  
-> **Tech Stack:** Node.js, Express.js, Socket.io, In-Memory Game State Engine, CORS
+# 🧠 Assignment 14 — Real-Time Multiplayer Live Quiz Battle
 
----
+A Socket.io + Express multiplayer quiz battle with a server-authoritative timer, speed-based scoring, PIN rooms, anti-cheat validation and live leaderboards.
 
-## 📌 1. Objective & Overview
+**Live Demo:**
+https://realtime-quiz-platform-w0c4.onrender.com/
 
-Build a high-stakes, interactive **Real-Time Multiplayer Trivia & Quiz Battle Arena** (similar to Kahoot / Quizizz) using **Socket.io** and **Express.js**. In this project, students will architect an authoritative game server that manages synchronized question countdown clocks, evaluates player answer submissions with speed-based score bonuses, and broadcasts live dynamic leaderboards across all connected participants.
-
-### Key Learning Outcomes:
-- Managing asymmetric roles in real-time rooms: **Quiz Host / Admin** vs **Players**.
-- Synchronizing server-driven countdown timers and handling question transitions without client-side drift.
-- Designing anti-cheat server validation: answers submitted after timer expiry are rejected.
-- Calculating dynamic scoring algorithms based on answer correctness and millisecond response speed.
-- Sorting, updating, and broadcasting live leaderboard rankings after every question round.
-
----
-
-## 🛠️ 2. Tech Stack & Dependencies
+## Run
 
 ```bash
-# Initialize project
-npm init -y
-
-# Install dependencies
-npm install express socket.io cors dotenv
-
-# Install dev tools
-npm install -D nodemon
+npm install
+npm run dev
 ```
 
----
+Open:
 
-## 🎮 3. Game Flow & State Machine
+- Host: `http://localhost:5000/host.html`
+- Player: `http://localhost:5000/player.html`
 
-```
-[Host Creates Room (PIN)] 
-        ⬇
-[Players Join Lobby via PIN] 
-        ⬇
-[Host Clicks "Start Game"] 
-        ⬇
-[Server Broadcasts Question & Starts 15s Timer] 
-        ⬇
-[Players Submit Answers (Calculates Speed Score)] 
-        ⬇
-[Timer Expires ➔ Server Reveals Correct Answer & Broadcasts Live Leaderboard] 
-        ⬇
-[Next Question or Final Winner Screen]
-```
+## Flow
 
----
+1. Host creates a room and receives a 4-digit PIN.
+2. Players join with the PIN.
+3. Host starts the quiz.
+4. The server broadcasts each question and controls the 15-second round.
+5. Correct answers receive 500–1000 points depending on response speed.
+6. Duplicate or late answers are rejected server-side.
+7. The leaderboard is broadcast after every answer and after each reveal.
+8. After the final question, the server broadcasts final rankings and winner.
 
-## 📡 4. Real-Time Socket Event Protocol
+## Scoring
 
-### 🎪 Lobby & Game Control
+`500 + speed bonus`, where the speed bonus is up to 500 points.
 
-| Event Name | Direction | Payload Schema | Description |
-|---|:---:|---|---|
-| `quiz:create` | `Host -> Server` | `{ "hostName": "Professor X", "category": "Tech" }` | Host initializes a quiz room, receives a 4-digit PIN |
-| `quiz:created` | `Server -> Host` | `{ "pin": "8421", "roomId": "quiz_8421" }` | Sends PIN to the host |
-| `quiz:join` | `Player -> Server` | `{ "pin": "8421", "playerName": "Karan" }` | Player enters lobby with PIN |
-| `lobby:update` | `Server -> Room` | `{ "players": [{ "name": "Karan", "score": 0 }] }` | Broadcasts lobby roster as players join |
-| `quiz:start` | `Host -> Server` | `{ "pin": "8421" }` | Host starts the quiz battle |
-
-### ⏱️ Question Round & Live Gameplay
-
-| Event Name | Direction | Payload Schema | Description |
-|---|:---:|---|---|
-| `question:start` | `Server -> Room` | `{ "questionIndex": 1, "totalQuestions": 5, "question": "What is Node.js runtime based on?", "options": ["V8", "SpiderMonkey", "Chakra", "JVM"], "timeLimitSeconds": 15 }` | Broadcasted by server. Omits correct answer to prevent cheating! |
-| `answer:submit` | `Player -> Server` | `{ "pin": "8421", "selectedOption": 0, "timeTakenMs": 3200 }` | Player submits chosen option |
-| `question:time_up` | `Server -> Room` | `{ "correctOption": 0, "explanation": "Node.js is built on Google Chrome's V8 engine." }` | Server reveals correct answer |
-| `leaderboard:update`| `Server -> Room` | `{ "leaderboard": [{ "rank": 1, "name": "Karan", "score": 1420 }] }` | Broadcasts sorted rankings |
-| `quiz:ended` | `Server -> Room` | `{ "winner": { "name": "Karan", "score": 4850 }, "finalRanks": [...] }` | Emitted after last question |
-
----
-
-## 🧮 5. Server-Side Scoring Algorithm
-
-```javascript
-// Score = Base (1000) * Speed Multiplier
-function calculateScore(isCorrect, timeTakenMs, totalTimeLimitMs = 15000) {
-  if (!isCorrect) return 0;
-  
-  const timeRemaining = Math.max(0, totalTimeLimitMs - timeTakenMs);
-  const speedBonus = Math.round((timeRemaining / totalTimeLimitMs) * 500); // Up to 500 bonus points
-  const baseScore = 500;
-  
-  return baseScore + speedBonus; // Total max 1000 points per question
-}
-```
-
----
-
-## 🏗️ 6. Directory Structure
+## Folder Structure
 
 ```text
 assignment-14-quiz-socket/
 ├── public/
-│   ├── index.html           # Host / Player entry portal
-│   ├── host.html            # Host control screen with live question display
-│   ├── player.html          # Mobile-friendly 4-color button answer grid
-│   └── app.js               # Socket handlers
+│   ├── index.html
+│   ├── host.html
+│   ├── player.html
+│   ├── app.js
+│   └── style.css
 ├── data/
-│   └── questions.json       # Question bank
+│   └── questions.json
 ├── sockets/
-│   ├── gameEngine.js        # Timers, round transitions & leaderboard sorting
-│   └── lobbyHandler.js      # PIN generation & player joining
+│   ├── gameEngine.js
+│   └── lobbyHandler.js
 ├── server.js
 ├── package.json
+├── .env
 └── README.md
 ```
+## Screenshots
 
----
+<img width="1470" height="877" alt="Screenshot 2026-09-17 at 7 43 44 PM" src="https://github.com/user-attachments/assets/9c32f6ce-b788-4818-8505-c28a8a4a083b" />
 
-## 🧪 7. Testing & Verification Guide
+<img width="1470" height="882" alt="Screenshot 2026-09-17 at 7 43 57 PM" src="https://github.com/user-attachments/assets/2c565a75-bb05-4068-bac2-c1ffb9cbd7c7" />
 
-1. Start the server on `http://localhost:5000`.
-2. Open Host View on Tab 1 (`http://localhost:5000/host.html`). Click **Create Quiz** and note the 4-digit PIN.
-3. Open Player View on Tab 2 and Tab 3 (`http://localhost:5000/player.html`). Enter PIN and join as "Player 1" and "Player 2".
-4. From the Host screen, click **Start Game**.
-5. Answer quickly on Player 1, and wait 10 seconds before answering on Player 2.
-6. Verify Player 1 receives a higher score due to faster response speed bonus.
-7. Verify neither player can submit an answer after the 15-second timer runs out.
+<img width="1470" height="881" alt="Screenshot 2026-09-17 at 7 45 03 PM" src="https://github.com/user-attachments/assets/8c2700d8-21bc-4178-92ed-15088638be23" />
 
----
+<img width="1470" height="956" alt="Screenshot 2026-09-17 at 7 45 48 PM" src="https://github.com/user-attachments/assets/943e8b85-75e1-41b5-be4a-93bd4ce7698a" />
 
-## 📊 8. Grading Rubric (100 Marks)
+<img width="1470" height="956" alt="Screenshot 2026-09-17 at 7 46 19 PM" src="https://github.com/user-attachments/assets/8aebbac3-f7bf-43c4-a5ab-acb581ce1001" />
 
-| Evaluation Component | Marks |
-|---|:---:|
-| **Lobby & PIN-Based Multi-Player Room Management** | 25 |
-| **Server-Controlled Synchronous Question Clocks & Timers** | 25 |
-| **Speed-Based Dynamic Scoring & Anti-Cheat Validation** | 20 |
-| **Real-Time Leaderboard Sorting & Rank Calculation** | 15 |
-| **Dual Interface Polish (Host Dashboard & Player Game Pad)** | 15 |
-| **Total Marks** | **100** |
+<img width="1470" height="876" alt="Screenshot 2026-09-17 at 7 46 29 PM" src="https://github.com/user-attachments/assets/cc738e5f-7f79-4182-80a6-ddd03cca1205" />
 
----
+<img width="1470" height="878" alt="Screenshot 2026-09-17 at 7 46 43 PM" src="https://github.com/user-attachments/assets/bad2fd34-e1ef-476b-b2ae-6d3d1491c1b4" />
 
-## 📤 9. Submission Guidelines
+<img width="1470" height="885" alt="Screenshot 2026-09-17 at 7 46 54 PM" src="https://github.com/user-attachments/assets/ae227087-7a55-44e7-8206-00f91d6d8100" />
 
-- Submit your GitHub repository: `itm-assignment-14-quiz-socket`.
-- Include sample questions in `data/questions.json` and a brief video demo of a 3-player battle.
+<img width="1470" height="956" alt="Screenshot 2026-09-17 at 7 47 08 PM" src="https://github.com/user-attachments/assets/2dd3e8a5-3798-4a00-9b4a-0520a7b5366d" />
+
+<img width="1470" height="956" alt="Screenshot 2026-09-17 at 7 47 28 PM" src="https://github.com/user-attachments/assets/691ed4ed-07af-4896-9974-4ed2e52d3882" />
+
+<img width="1470" height="956" alt="Screenshot 2026-09-17 at 7 47 56 PM" src="https://github.com/user-attachments/assets/d241e8fb-6a1b-4600-b2cf-8f8abab5e706" />
+
+<img width="1470" height="882" alt="Screenshot 2026-09-17 at 7 48 06 PM" src="https://github.com/user-attachments/assets/d067688d-635d-4c3c-8c0b-f887b2aea7aa" />
+
+
+## Demo
+
+For the required 3-player demonstration, open one host tab and three player tabs. Create a room, share the PIN, start the game, answer at different speeds, and show the leaderboard updating in real time.
+
+> Note: The server calculates elapsed time itself. The player's `timeTakenMs` payload is not trusted for deciding whether the submission is late or for scoring.
