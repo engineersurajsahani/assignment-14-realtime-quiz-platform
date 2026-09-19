@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "question": "What is Node.js runtime based on?",
+    "options": ["V8", "SpiderMonkey", "Chakra", "JVM"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google Chrome's V8 JavaScript engine.",
+    "timeLimitSeconds": 15,
+    "category": "Backend"
+  },
+  {
+    "id": 2,
+    "question": "Which underlying protocol enables Socket.io's bidirectional communication?",
+    "options": ["FTP", "WebSocket", "SMTP", "DNS"],
+    "correctOption": 1,
+    "explanation": "Socket.io utilizes the WebSocket protocol for full-duplex communication, with HTTP long-polling fallback.",
+    "timeLimitSeconds": 15,
+    "category": "Real-Time Web"
+  },
+  {
+    "id": 3,
+    "question": "In Express.js, what does next() represent in a middleware function?",
+    "options": ["Terminates the request", "Passes control to the next middleware", "Restarts the HTTP server", "Sends a 404 response"],
+    "correctOption": 1,
+    "explanation": "Calling next() passes control and execution flow to the subsequent middleware function in the stack.",
+    "timeLimitSeconds": 15,
+    "category": "Backend"
+  },
+  {
+    "id": 4,
+    "question": "Which HTTP status code signifies 'Too Many Requests' for rate limiting?",
+    "options": ["403", "404", "429", "502"],
+    "correctOption": 2,
+    "explanation": "HTTP 429 indicates that the client has sent too many requests in a given amount of time (rate limited).",
+    "timeLimitSeconds": 15,
+    "category": "Web Protocols"
+  },
+  {
+    "id": 5,
+    "question": "What event is emitted by Socket.io when a client abruptly closes their connection?",
+    "options": ["disconnect", "closeSession", "abort", "leaveRoom"],
+    "correctOption": 0,
+    "explanation": "The 'disconnect' event is triggered automatically when a client closes the socket or loses connectivity.",
+    "timeLimitSeconds": 15,
+    "category": "Real-Time Web"
+  },
+  {
+    "id": 6,
+    "question": "Which Node.js core module provides asynchronous event-driven architecture with emitters?",
+    "options": ["fs", "events", "stream", "cluster"],
+    "correctOption": 1,
+    "explanation": "The 'events' module exposes EventEmitter which is foundational to Node.js reactive architecture.",
+    "timeLimitSeconds": 15,
+    "category": "Backend"
+  },
+  {
+    "id": 7,
+    "question": "What is the primary advantage of HTTP/2 over HTTP/1.1?",
+    "options": ["Multiplexing over a single TCP connection", "Removal of TLS/SSL encryption", "Requires XML payload", "Stateless TCP handshakes"],
+    "correctOption": 0,
+    "explanation": "HTTP/2 introduces binary framing and multiplexing to handle multiple concurrent streams over a single connection.",
+    "timeLimitSeconds": 15,
+    "category": "Web Protocols"
+  },
+  {
+    "id": 8,
+    "question": "Which data structure in Node.js handles raw binary memory allocation outside V8 heap?",
+    "options": ["ArrayBuffer", "Buffer", "Blob", "TypedStream"],
+    "correctOption": 1,
+    "explanation": "Buffer is a global Node.js class designed to handle raw octet streams and binary data directly in memory.",
+    "timeLimitSeconds": 15,
+    "category": "Backend"
+  }
+]

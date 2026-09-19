@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Player Gamepad | Real-Time Quiz Battle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070a12;
+      --card-bg: rgba(18, 24, 38, 0.9);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent-pink: #ec4899;
+      --accent-cyan: #06b6d4;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --kahoot-red: #e21b3c;
+      --kahoot-blue: #1368ce;
+      --kahoot-yellow: #d97706;
+      --kahoot-green: #15803d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    /* Ambient lighting */
+    .ambient-glow {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      filter: blur(140px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.25;
+    }
+    .glow-1 { top: -100px; left: -100px; background: #6366f1; }
+    .glow-2 { bottom: -100px; right: -100px; background: #06b6d4; }
+
+    header {
+      position: relative;
+      z-index: 20;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #1368ce, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .player-header-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .player-score-badge {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      padding: 5px 12px;
+      border-radius: 9999px;
+      color: #818cf8;
+    }
+
+    main {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px;
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Views */
+    .player-view {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .player-view.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* VIEW 1: JOIN FORM */
+    .join-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px 24px;
+      width: 100%;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+    .join-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .join-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .join-sub {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .input-box {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 2px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px;
+      color: #fff;
+      font-size: 18px;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 14px;
+      text-align: center;
+      font-weight: 700;
+      transition: border-color 0.2s;
+    }
+    .input-box:focus {
+      border-color: #6366f1;
+    }
+    .input-pin {
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 6px;
+      font-size: 24px;
+    }
+
+    .btn-join {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      border: none;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+      transition: transform 0.2s;
+      margin-top: 6px;
+    }
+    .btn-join:hover {
+      transform: scale(1.02);
+    }
+
+    /* VIEW 2: LOBBY WAITING */
+    .waiting-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 40px 24px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    .waiting-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    }
+    .waiting-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .waiting-text {
+      color: #cbd5e1;
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
+    .waiting-pulse-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #818cf8;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #818cf8;
+      animation: pulseDot 1.5s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+    }
+
+    /* VIEW 3: ACTIVE QUESTION GAMEPAD */
+    .gamepad-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .gamepad-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-weight: 700;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    /* Timer Progress Bar */
+    .timer-bar-wrap {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .timer-bar-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #ec4899);
+      transition: width 0.1s linear;
+    }
+
+    .gamepad-q-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 20px;
+      text-align: center;
+      margin-bottom: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #fff;
+    }
+
+    /* 4-Color Grid */
+    .gamepad-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .btn-answer {
+      border: none;
+      border-radius: 20px;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+      transition: transform 0.1s, opacity 0.2s, filter 0.2s;
+      padding: 16px;
+      position: relative;
+    }
+    .btn-answer:active {
+      transform: scale(0.96);
+      filter: brightness(0.9);
+    }
+    .btn-answer-0 { background: #e21b3c; } /* Red */
+    .btn-answer-1 { background: #1368ce; } /* Blue */
+    .btn-answer-2 { background: #d97706; } /* Yellow */
+    .btn-answer-3 { background: #15803d; } /* Green */
+
+    .btn-shape-icon {
+      font-size: 40px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .btn-option-label {
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    /* VIEW 4: ANSWER LOCKED */
+    .locked-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 40px 24px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    .locked-icon {
+      font-size: 54px;
+      margin-bottom: 16px;
+      animation: pulseLock 1.5s infinite;
+    }
+    @keyframes pulseLock {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .locked-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .locked-speed-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 6px 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    /* VIEW 5: ROUND RESULT */
+    .result-card {
+      border-radius: 24px;
+      padding: 36px 24px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .result-correct {
+      background: rgba(21, 128, 61, 0.35);
+      border: 2px solid #15803d;
+    }
+    .result-incorrect {
+      background: rgba(226, 27, 60, 0.35);
+      border: 2px solid #e21b3c;
+    }
+    .result-icon {
+      font-size: 60px;
+      margin-bottom: 12px;
+    }
+    .result-status-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 36px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+    .result-points {
+      font-family: 'Outfit', sans-serif;
+      font-size: 42px;
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+    .result-correct .result-points { color: #4ade80; }
+    .result-incorrect .result-points { color: #f87171; }
+
+    .result-streak-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      background: rgba(249, 115, 22, 0.2);
+      border: 1px solid #f97316;
+      color: #fb923c;
+      margin-bottom: 20px;
+    }
+
+    /* VIEW 6: GAME OVER */
+    .over-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 40px 24px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    .over-trophy {
+      font-size: 72px;
+      margin-bottom: 16px;
+    }
+    .over-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 34px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .over-rank-badge {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 900;
+      color: #f59e0b;
+      margin-bottom: 8px;
+    }
+    .over-score {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <header>
+    <a href="/index.html" class="brand">
+      <div class="brand-icon">🎮</div>
+      <div class="brand-title">Quiz Gamepad</div>
+    </a>
+    <div class="player-header-meta">
+      <div id="player-score-tag" class="player-score-badge" style="display: none;">0 pts</div>
+    </div>
+  </header>
+
+  <main>
+    <!-- VIEW 1: JOIN FORM -->
+    <section id="view-join" class="player-view active">
+      <div class="join-card">
+        <div class="join-icon">🚀</div>
+        <h1 class="join-title">Join Live Quiz</h1>
+        <p class="join-sub">Enter the 4-digit PIN displayed on the host screen.</p>
+
+        <input type="text" id="input-pin" class="input-box input-pin" maxlength="4" placeholder="4-DIGIT PIN" autocomplete="off">
+        <input type="text" id="input-name" class="input-box" maxlength="20" placeholder="Choose a Nickname" autocomplete="off">
+
+        <button id="btn-submit-join" class="btn-join">
+          Enter Game Arena
+        </button>
+      </div>
+    </section>
+
+    <!-- VIEW 2: LOBBY WAITING -->
+    <section id="view-lobby" class="player-view">
+      <div class="waiting-card">
+        <div class="waiting-avatar">😎</div>
+        <h2 id="lobby-player-nickname" class="waiting-name">Player</h2>
+        <p class="waiting-text">You're in! Check for your name on the host's screen.</p>
+
+        <div class="waiting-pulse-pill">
+          <div class="pulse-dot"></div>
+          Waiting for host to start...
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: ACTIVE QUESTION GAMEPAD -->
+    <section id="view-question" class="player-view">
+      <div class="gamepad-container">
+        <div class="gamepad-top">
+          <span id="gamepad-q-label">Question 1 / 5</span>
+          <span id="gamepad-timer-sec">15s</span>
+        </div>
+
+        <div class="timer-bar-wrap">
+          <div id="gamepad-timer-bar" class="timer-bar-fill"></div>
+        </div>
+
+        <div id="gamepad-q-text" class="gamepad-q-card">
+          Loading question...
+        </div>
+
+        <div class="gamepad-grid">
+          <!-- Button 0: Red Triangle -->
+          <button id="btn-opt-0" class="btn-answer btn-answer-0" onclick="submitOption(0)">
+            <div class="btn-shape-icon">▲</div>
+            <div id="btn-text-0" class="btn-option-label">Option A</div>
+          </button>
+
+          <!-- Button 1: Blue Diamond -->
+          <button id="btn-opt-1" class="btn-answer btn-answer-1" onclick="submitOption(1)">
+            <div class="btn-shape-icon">◆</div>
+            <div id="btn-text-1" class="btn-option-label">Option B</div>
+          </button>
+
+          <!-- Button 2: Yellow Circle -->
+          <button id="btn-opt-2" class="btn-answer btn-answer-2" onclick="submitOption(2)">
+            <div class="btn-shape-icon">●</div>
+            <div id="btn-text-2" class="btn-option-label">Option C</div>
+          </button>
+
+          <!-- Button 3: Green Square -->
+          <button id="btn-opt-3" class="btn-answer btn-answer-3" onclick="submitOption(3)">
+            <div class="btn-shape-icon">■</div>
+            <div id="btn-text-3" class="btn-option-label">Option D</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: ANSWER LOCKED -->
+    <section id="view-locked" class="player-view">
+      <div class="locked-card">
+        <div class="locked-icon">🔒</div>
+        <h2 class="locked-title">Answer Locked In!</h2>
+        <div id="locked-speed-text" class="locked-speed-badge">⚡ 1.2s response time</div>
+        <p style="color: var(--text-muted); font-size: 15px;">
+          Hold tight! Awaiting timer completion and reveal...
+        </p>
+      </div>
+    </section>
+
+    <!-- VIEW 5: ROUND RESULT -->
+    <section id="view-result" class="player-view">
+      <div id="result-card" class="result-card">
+        <div id="result-icon" class="result-icon">🎉</div>
+        <h2 id="result-title" class="result-status-title">CORRECT!</h2>
+        <div id="result-points" class="result-points">+940 pts</div>
+        <div id="result-streak" class="result-streak-badge" style="display: none;">🔥 Streak Active</div>
+        <p id="result-total" style="color: #cbd5e1; font-size: 16px;">Total Score: 940 pts</p>
+      </div>
+    </section>
+
+    <!-- VIEW 6: GAME OVER -->
+    <section id="view-ended" class="player-view">
+      <div class="over-card">
+        <div class="over-trophy">🏆</div>
+        <h1 class="over-title">Battle Concluded!</h1>
+        <div id="over-rank" class="over-rank-badge">Rank #1</div>
+        <p id="over-score-text" class="over-score">Final Score: 4850 pts</p>
+
+        <button onclick="window.location.reload()" class="btn-join" style="max-width: 260px;">
+          Play Again
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+  <script>
+    const socket = io();
+
+    let playerPin = null;
+    let playerName = null;
+    let totalScore = 0;
+    let questionStartTime = 0;
+    let roundTimerInterval = null;
+    let timeLimitSeconds = 15;
+    let hasSubmittedThisRound = false;
+
+    // View Navigation Helper
+    function switchView(viewId) {
+      document.querySelectorAll('.player-view').forEach(v => v.classList.remove('active'));
+      const target = document.getElementById(viewId);
+      if (target) target.classList.add('active');
+    }
+
+    // Auto-fill from URL parameters (e.g. ?pin=8421&name=Karan)
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pinParam = urlParams.get('pin');
+      const nameParam = urlParams.get('name');
+
+      if (pinParam) document.getElementById('input-pin').value = pinParam;
+      if (nameParam) document.getElementById('input-name').value = nameParam;
+
+      if (pinParam && nameParam) {
+        document.getElementById('btn-submit-join').click();
+      }
+    });
+
+    // 1. Join Request
+    document.getElementById('btn-submit-join').addEventListener('click', () => {
+      const pin = document.getElementById('input-pin').value.trim();
+      const name = document.getElementById('input-name').value.trim();
+
+      if (!pin || pin.length !== 4) {
+        showToast('Please enter a valid 4-digit PIN', 'error');
+        return;
+      }
+      if (!name) {
+        showToast('Please choose a nickname', 'error');
+        return;
+      }
+
+      sound.init();
+      playerPin = pin;
+      playerName = name;
+
+      socket.emit('quiz:join', { pin: playerPin, playerName });
+    });
+
+    // 2. Successfully Joined Room
+    socket.on('quiz:joined', (data) => {
+      document.getElementById('lobby-player-nickname').innerText = data.playerName;
+      document.getElementById('player-score-tag').style.display = 'block';
+      document.getElementById('player-score-tag').innerText = '0 pts';
+      switchView('view-lobby');
+      showToast(`Joined quiz room ${data.pin}!`, 'success');
+    });
+
+    // 3. Question Round Commences
+    socket.on('question:start', (data) => {
+      hasSubmittedThisRound = false;
+      questionStartTime = Date.now();
+      timeLimitSeconds = data.timeLimitSeconds || 15;
+
+      switchView('view-question');
+
+      document.getElementById('gamepad-q-label').innerText = `Question ${data.questionIndex} / ${data.totalQuestions}`;
+      document.getElementById('gamepad-q-text').innerText = data.question;
+
+      // Enable answer buttons & set labels
+      data.options.forEach((opt, idx) => {
+        const btn = document.getElementById(`btn-opt-${idx}`);
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        document.getElementById(`btn-text-${idx}`).innerText = opt;
+      });
+
+      // Synchronize Timer Bar
+      let remaining = timeLimitSeconds;
+      const timerBar = document.getElementById('gamepad-timer-bar');
+      const timerLabel = document.getElementById('gamepad-timer-sec');
+
+      timerBar.style.width = '100%';
+      timerLabel.innerText = `${remaining}s`;
+
+      if (roundTimerInterval) clearInterval(roundTimerInterval);
+      roundTimerInterval = setInterval(() => {
+        const elapsed = (Date.now() - questionStartTime) / 1000;
+        const left = Math.max(0, timeLimitSeconds - elapsed);
+        const pct = (left / timeLimitSeconds) * 100;
+
+        timerBar.style.width = `${pct}%`;
+        timerLabel.innerText = `${Math.ceil(left)}s`;
+
+        if (left <= 0) {
+          clearInterval(roundTimerInterval);
+        }
+      }, 100);
+    });
+
+    // 4. Submit Answer
+    window.submitOption = function(optionIndex) {
+      if (hasSubmittedThisRound) return;
+      hasSubmittedThisRound = true;
+
+      const timeTakenMs = Date.now() - questionStartTime;
+      sound.playLock();
+
+      // Disable buttons
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`btn-opt-${i}`).disabled = true;
+      }
+
+      // Send to server
+      socket.emit('answer:submit', {
+        pin: playerPin,
+        selectedOption: optionIndex,
+        timeTakenMs
+      });
+
+      // Show locked view immediately
+      const sec = (timeTakenMs / 1000).toFixed(2);
+      document.getElementById('locked-speed-text').innerText = `⚡ ${sec}s response speed`;
+      switchView('view-locked');
+    };
+
+    // Answer Receipt Acknowledged
+    socket.on('answer:acknowledged', (data) => {
+      // Server acknowledged answer successfully
+    });
+
+    // Answer rejected (anti-cheat or late submission)
+    socket.on('answer:rejected', (data) => {
+      showToast(data.reason || 'Answer was rejected', 'error');
+    });
+
+    // 5. Individual Feedback for Question Round
+    socket.on('answer:result', (data) => {
+      if (roundTimerInterval) clearInterval(roundTimerInterval);
+
+      const card = document.getElementById('result-card');
+      card.classList.remove('result-correct', 'result-incorrect');
+
+      totalScore = data.totalScore;
+      document.getElementById('player-score-tag').innerText = `${totalScore} pts`;
+
+      if (data.isCorrect) {
+        card.classList.add('result-correct');
+        document.getElementById('result-icon').innerText = '🎉';
+        document.getElementById('result-title').innerText = 'CORRECT!';
+        document.getElementById('result-points').innerText = `+${data.scoreAdded} pts`;
+        sound.playCorrect();
+
+        if (data.streak > 1) {
+          const streakEl = document.getElementById('result-streak');
+          streakEl.style.display = 'inline-flex';
+          streakEl.innerText = `🔥 ${data.streak} in a row!`;
+        } else {
+          document.getElementById('result-streak').style.display = 'none';
+        }
+      } else {
+        card.classList.add('result-incorrect');
+        document.getElementById('result-icon').innerText = '❌';
+        document.getElementById('result-title').innerText = 'INCORRECT';
+        document.getElementById('result-points').innerText = '+0 pts';
+        document.getElementById('result-streak').style.display = 'none';
+        sound.playIncorrect();
+      }
+
+      document.getElementById('result-total').innerText = `Total Score: ${totalScore} pts`;
+      switchView('view-result');
+    });
+
+    // 6. Game Ended / Final Rank
+    socket.on('quiz:ended', (data) => {
+      if (roundTimerInterval) clearInterval(roundTimerInterval);
+      switchView('view-ended');
+
+      const myRankObj = (data.finalRanks || []).find(p => p.name.toLowerCase() === playerName.toLowerCase());
+      const myRank = myRankObj ? myRankObj.rank : '-';
+
+      document.getElementById('over-rank').innerText = `Rank #${myRank}`;
+      document.getElementById('over-score-text').innerText = `Final Score: ${totalScore} pts`;
+
+      if (myRank <= 3) {
+        sound.playFanfare();
+        triggerConfetti();
+      }
+    });
+
+    // Error handler
+    socket.on('error:message', (err) => {
+      showToast(err.message || 'An error occurred', 'error');
+    });
+  </script>
+</body>
+</html>
