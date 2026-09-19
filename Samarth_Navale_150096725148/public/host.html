@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Host Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div id="hostSetup" class="card">
+      <h2>Host a Quiz Game</h2>
+      <p class="student-info">Samarth Navale (150096725148)</p>
+      <div style="margin-top: 15px;">
+        <label>Host Name: <input type="text" id="hostName" value="Quiz Master"></label>
+        <button id="createQuizBtn" class="btn">Create Quiz Room</button>
+      </div>
+    </div>
+
+    <div id="lobbyScreen" class="card" style="display: none;">
+      <h2>Quiz Lobby</h2>
+      <p>Tell players to join with PIN:</p>
+      <div class="pin-display" id="displayPin">0000</div>
+      
+      <h3>Players Joined (<span id="playerCount">0</span>)</h3>
+      <ul class="player-list" id="playersUl"></ul>
+
+      <button id="startQuizBtn" class="btn btn-green" style="margin-top: 15px;">Start Game</button>
+    </div>
+
+    <div id="gameScreen" class="card" style="display: none;">
+      <div style="display: flex; justify-content: space-between;">
+        <span id="questionNum">Question 1/5</span>
+        <span class="timer-bar" id="timerCount">15s</span>
+      </div>
+
+      <h2 id="questionText" style="margin: 20px 0;">Question title here</h2>
+
+      <div class="option-grid" id="optionsGrid"></div>
+
+      <div id="revealBox" style="margin-top: 15px; display: none; font-size: 14px;">
+        <strong>Correct Answer:</strong> <span id="correctAnswerText"></span><br>
+        <span id="explanationText" style="color: #666;"></span>
+      </div>
+    </div>
+
+    <div id="leaderboardScreen" class="card" style="display: none;">
+      <h2>Leaderboard</h2>
+      <ul class="player-list" id="leaderboardUl"></ul>
+    </div>
+
+    <div id="winnerScreen" class="card" style="display: none;">
+      <h2>🏆 Quiz Ended! 🏆</h2>
+      <h3 id="winnerName" style="color: #28a745; margin: 15px 0;"></h3>
+      <h3>Final Rankings</h3>
+      <ul class="player-list" id="finalRanksUl"></ul>
+      <a href="host.html" class="btn" style="margin-top: 15px;">Host Another Quiz</a>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    let currentPin = null;
+    let timerInterval = null;
+
+    const hostSetup = document.getElementById('hostSetup');
+    const lobbyScreen = document.getElementById('lobbyScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const leaderboardScreen = document.getElementById('leaderboardScreen');
+    const winnerScreen = document.getElementById('winnerScreen');
+
+    document.getElementById('createQuizBtn').addEventListener('click', () => {
+      const name = document.getElementById('hostName').value.trim();
+      socket.emit('quiz:create', { hostName: name, category: 'Tech' });
+    });
+
+    socket.on('quiz:created', ({ pin }) => {
+      currentPin = pin;
+      document.getElementById('displayPin').textContent = pin;
+      hostSetup.style.display = 'none';
+      lobbyScreen.style.display = 'block';
+    });
+
+    socket.on('lobby:update', ({ players }) => {
+      const ul = document.getElementById('playersUl');
+      ul.innerHTML = '';
+      if (Array.isArray(players)) {
+        players.forEach((p) => {
+          const li = document.createElement('li');
+          li.textContent = `👤 ${p.name}`;
+          ul.appendChild(li);
+        });
+        document.getElementById('playerCount').textContent = players.length;
+      }
+    });
+
+    document.getElementById('startQuizBtn').addEventListener('click', () => {
+      socket.emit('quiz:start', { pin: currentPin });
+    });
+
+    socket.on('question:start', ({ questionIndex, totalQuestions, question, options, timeLimitSeconds }) => {
+      lobbyScreen.style.display = 'none';
+      leaderboardScreen.style.display = 'none';
+      gameScreen.style.display = 'block';
+      document.getElementById('revealBox').style.display = 'none';
+
+      document.getElementById('questionNum').textContent = `Question ${questionIndex}/${totalQuestions}`;
+      document.getElementById('questionText').textContent = question;
+
+      const grid = document.getElementById('optionsGrid');
+      grid.innerHTML = '';
+      options.forEach((opt, idx) => {
+        const div = document.createElement('div');
+        div.className = `option-btn opt-${idx}`;
+        div.textContent = `${idx + 1}. ${opt}`;
+        grid.appendChild(div);
+      });
+
+      let remaining = timeLimitSeconds;
+      document.getElementById('timerCount').textContent = `${remaining}s`;
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        remaining--;
+        if (remaining >= 0) {
+          document.getElementById('timerCount').textContent = `${remaining}s`;
+        } else {
+          clearInterval(timerInterval);
+        }
+      }, 1000);
+    });
+
+    socket.on('question:time_up', ({ correctOption, explanation }) => {
+      if (timerInterval) clearInterval(timerInterval);
+      document.getElementById('timerCount').textContent = `0s`;
+      document.getElementById('revealBox').style.display = 'block';
+      document.getElementById('correctAnswerText').textContent = `Option ${correctOption + 1}`;
+      document.getElementById('explanationText').textContent = explanation;
+    });
+
+    socket.on('leaderboard:update', ({ leaderboard }) => {
+      leaderboardScreen.style.display = 'block';
+      const ul = document.getElementById('leaderboardUl');
+      ul.innerHTML = '';
+      if (Array.isArray(leaderboard)) {
+        leaderboard.forEach((p) => {
+          const li = document.createElement('li');
+          li.textContent = `#${p.rank} ${p.name} — ${p.score} pts`;
+          ul.appendChild(li);
+        });
+      }
+    });
+
+    socket.on('quiz:ended', ({ winner, finalRanks }) => {
+      if (timerInterval) clearInterval(timerInterval);
+      gameScreen.style.display = 'none';
+      leaderboardScreen.style.display = 'none';
+      winnerScreen.style.display = 'block';
+
+      document.getElementById('winnerName').textContent = `Winner: ${winner.name} (${winner.score} pts)`;
+      const ul = document.getElementById('finalRanksUl');
+      ul.innerHTML = '';
+      if (Array.isArray(finalRanks)) {
+        finalRanks.forEach((p) => {
+          const li = document.createElement('li');
+          li.textContent = `#${p.rank} ${p.name} — ${p.score} pts`;
+          ul.appendChild(li);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

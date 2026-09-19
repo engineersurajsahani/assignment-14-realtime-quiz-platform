@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: samarth-assignment-14-realtime-quiz-platform
+    env: node
+    buildCommand: cd Samarth_Navale_150096725148 && npm install
+    startCommand: cd Samarth_Navale_150096725148 && npm start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production

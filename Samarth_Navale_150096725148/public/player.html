@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Player Pad</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div id="joinScreen" class="card">
+      <h2>Join Live Quiz</h2>
+      <p class="student-info">Samarth Navale (150096725148)</p>
+      <div style="margin-top: 15px;">
+        <label>Game PIN: <input type="text" id="pinInput" placeholder="Enter 4-digit PIN"></label>
+        <label>Player Name: <input type="text" id="playerNameInput" placeholder="Your Nickname"></label>
+        <button id="joinBtn" class="btn btn-green">Enter Game</button>
+      </div>
+    </div>
+
+    <div id="playerLobby" class="card" style="display: none;">
+      <h2>You're In!</h2>
+      <p>Waiting for host to start...</p>
+      <h3 id="displayPlayerName" style="color: #007bff; margin-top: 10px;"></h3>
+    </div>
+
+    <div id="playerGame" class="card" style="display: none;">
+      <div style="display: flex; justify-content: space-between;">
+        <span id="playerQuestionNum">Question 1</span>
+        <span class="timer-bar" id="playerTimer">15s</span>
+      </div>
+
+      <h3 id="playerQuestionText" style="margin: 15px 0;"></h3>
+
+      <div class="option-grid" id="playerOptionsGrid"></div>
+
+      <div id="playerFeedback" style="margin-top: 15px; font-size: 16px; font-weight: bold; display: none;"></div>
+    </div>
+
+    <div id="playerEnd" class="card" style="display: none;">
+      <h2>Game Finished!</h2>
+      <h3 id="playerFinalScore" style="color: #28a745; margin: 15px 0;"></h3>
+      <a href="player.html" class="btn">Play Again</a>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    let currentPin = null;
+    let questionStartTime = 0;
+    let answered = false;
+    let timerInterval = null;
+
+    const joinScreen = document.getElementById('joinScreen');
+    const playerLobby = document.getElementById('playerLobby');
+    const playerGame = document.getElementById('playerGame');
+    const playerEnd = document.getElementById('playerEnd');
+
+    document.getElementById('joinBtn').addEventListener('click', () => {
+      const pin = document.getElementById('pinInput').value.trim();
+      const name = document.getElementById('playerNameInput').value.trim() || 'Player';
+      currentPin = pin;
+      socket.emit('quiz:join', { pin, playerName: name });
+    });
+
+    socket.on('quiz:joined', ({ pin, playerName }) => {
+      joinScreen.style.display = 'none';
+      playerLobby.style.display = 'block';
+      document.getElementById('displayPlayerName').textContent = playerName;
+    });
+
+    socket.on('quiz:error', ({ message }) => {
+      alert(message);
+    });
+
+    socket.on('question:start', ({ questionIndex, totalQuestions, question, options, timeLimitSeconds }) => {
+      playerLobby.style.display = 'none';
+      playerGame.style.display = 'block';
+      document.getElementById('playerFeedback').style.display = 'none';
+      answered = false;
+      questionStartTime = Date.now();
+
+      document.getElementById('playerQuestionNum').textContent = `Question ${questionIndex}/${totalQuestions}`;
+      document.getElementById('playerQuestionText').textContent = question;
+
+      const grid = document.getElementById('playerOptionsGrid');
+      grid.innerHTML = '';
+      options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `option-btn opt-${idx}`;
+        btn.textContent = `${idx + 1}. ${opt}`;
+        btn.addEventListener('click', () => {
+          if (answered) return;
+          answered = true;
+          const timeTakenMs = Date.now() - questionStartTime;
+          socket.emit('answer:submit', {
+            pin: currentPin,
+            selectedOption: idx,
+            timeTakenMs
+          });
+          document.querySelectorAll('.option-btn').forEach((b) => (b.disabled = true));
+        });
+        grid.appendChild(btn);
+      });
+
+      let remaining = timeLimitSeconds;
+      document.getElementById('playerTimer').textContent = `${remaining}s`;
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        remaining--;
+        if (remaining >= 0) {
+          document.getElementById('playerTimer').textContent = `${remaining}s`;
+        } else {
+          clearInterval(timerInterval);
+        }
+      }, 1000);
+    });
+
+    socket.on('answer:result', ({ correct, scoreGained, totalScore }) => {
+      const fb = document.getElementById('playerFeedback');
+      fb.style.display = 'block';
+      if (correct) {
+        fb.style.color = '#28a745';
+        fb.textContent = `Correct! +${scoreGained} points (Total: ${totalScore})`;
+      } else {
+        fb.style.color = '#dc3545';
+        fb.textContent = `Incorrect! +0 points (Total: ${totalScore})`;
+      }
+    });
+
+    socket.on('question:time_up', () => {
+      if (timerInterval) clearInterval(timerInterval);
+      document.getElementById('playerTimer').textContent = '0s';
+      document.querySelectorAll('.option-btn').forEach((b) => (b.disabled = true));
+    });
+
+    socket.on('quiz:ended', ({ finalRanks }) => {
+      if (timerInterval) clearInterval(timerInterval);
+      playerGame.style.display = 'none';
+      playerEnd.style.display = 'block';
+
+      const myName = document.getElementById('displayPlayerName').textContent;
+      const myRank = finalRanks ? finalRanks.find((r) => r.name === myName) : null;
+      if (myRank) {
+        document.getElementById('playerFinalScore').textContent = `Your Rank: #${myRank.rank} with ${myRank.score} points!`;
+      }
+    });
+  </script>
+</body>
+</html>

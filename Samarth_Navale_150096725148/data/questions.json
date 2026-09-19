@@ -1,0 +1,32 @@
+[
+  {
+    "question": "What is Node.js runtime based on?",
+    "options": ["V8 Engine", "SpiderMonkey", "Chakra", "JVM"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google Chrome's V8 JavaScript engine."
+  },
+  {
+    "question": "Which protocol does Socket.io use for bi-directional communication?",
+    "options": ["HTTP/1.1", "WebSocket", "gRPC", "MQTT"],
+    "correctOption": 1,
+    "explanation": "Socket.io primarily uses WebSockets with fallback to HTTP long-polling."
+  },
+  {
+    "question": "What is the time complexity of looking up a key in a Hash Map?",
+    "options": ["O(n)", "O(log n)", "O(1)", "O(n^2)"],
+    "correctOption": 2,
+    "explanation": "Hash map average lookups operate in constant time O(1)."
+  },
+  {
+    "question": "Which HTTP status code represents 'Too Many Requests'?",
+    "options": ["400", "403", "429", "503"],
+    "correctOption": 2,
+    "explanation": "HTTP 429 indicates rate limiting / too many requests."
+  },
+  {
+    "question": "Which database type is Google Firebase Firestore?",
+    "options": ["Relational SQL", "NoSQL Document", "Columnar", "Graph"],
+    "correctOption": 1,
+    "explanation": "Firestore is a scalable cloud NoSQL document database."
+  }
+]
