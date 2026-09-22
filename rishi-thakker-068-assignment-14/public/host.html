@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quiz Battle - Host</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="host">
+
+  <div id="createSection" class="panel">
+    <h1>Host a Quiz</h1>
+    <input id="hostNameInput" type="text" placeholder="Your name" />
+    <input id="categoryInput" type="text" placeholder="Category (e.g. Football)" value="Football" />
+    <button id="createButton">Create Quiz</button>
+  </div>
+
+  <div id="lobbySection" class="panel hidden">
+    <h2>Quiz PIN</h2>
+    <div id="pinDisplay" class="pin"></div>
+    <h3>Players in lobby</h3>
+    <ul id="lobbyPlayerList" class="playerList"></ul>
+    <button id="startButton">Start Game</button>
+  </div>
+
+  <div id="questionSection" class="panel hidden">
+    <div class="questionMeta">
+      <span id="questionProgress"></span>
+      <span id="timerDisplay" class="timer"></span>
+    </div>
+    <h2 id="questionText"></h2>
+    <ul id="optionsList" class="optionsList"></ul>
+  </div>
+
+  <div id="resultsSection" class="panel hidden">
+    <h2>Correct answer</h2>
+    <p id="correctAnswerText" class="correctAnswer"></p>
+    <p id="explanationText" class="explanation"></p>
+    <h3>Leaderboard</h3>
+    <ol id="leaderboardList" class="leaderboardList"></ol>
+    <p class="nextHint">Next question coming up...</p>
+  </div>
+
+  <div id="endedSection" class="panel hidden">
+    <h1>Quiz Over</h1>
+    <p id="winnerText" class="winnerText"></p>
+    <h3>Final Standings</h3>
+    <ol id="finalLeaderboardList" class="leaderboardList"></ol>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "category": "Football",
+    "question": "How many players are on a football team on the pitch at one time (including the goalkeeper)?",
+    "options": ["9", "10", "11", "12"],
+    "correctOption": 2,
+    "explanation": "Each team fields 11 players, including one goalkeeper."
+  },
+  {
+    "id": 2,
+    "category": "Football",
+    "question": "Which country has won the most FIFA World Cups?",
+    "options": ["Germany", "Argentina", "Brazil", "Italy"],
+    "correctOption": 2,
+    "explanation": "Brazil has won the World Cup 5 times — more than any other nation."
+  },
+  {
+    "id": 3,
+    "category": "Football",
+    "question": "What is it called when a player scores 3 goals in a single match?",
+    "options": ["Triple Strike", "Hat-trick", "Trilogy Goal", "Triad"],
+    "correctOption": 1,
+    "explanation": "Scoring three goals in one game is famously called a 'hat-trick'."
+  },
+  {
+    "id": 4,
+    "category": "Football",
+    "question": "Which club has won the UEFA Champions League the most times?",
+    "options": ["Barcelona", "AC Milan", "Bayern Munich", "Real Madrid"],
+    "correctOption": 3,
+    "explanation": "Real Madrid holds the record with 15 Champions League titles."
+  },
+  {
+    "id": 5,
+    "category": "Football",
+    "question": "How long is a standard football match (excluding stoppage time)?",
+    "options": ["80 minutes", "90 minutes", "100 minutes", "120 minutes"],
+    "correctOption": 1,
+    "explanation": "A standard match is 90 minutes, split into two 45-minute halves."
+  },
+  {
+    "id": 6,
+    "category": "Football",
+    "question": "What card does a referee show for a serious foul that results in a player being sent off?",
+    "options": ["Yellow card", "Red card", "Blue card", "Green card"],
+    "correctOption": 1,
+    "explanation": "A red card results in the player being sent off for the rest of the match."
+  },
+  {
+    "id": 7,
+    "category": "Football",
+    "question": "Who is the GOAT (Greatest Of All Time) in football?",
+    "options": ["Messi", "Ronaldo", "Pelé", "Maradona"],
+    "correctOption": 1,
+    "explanation": "Cristiano Ronaldo — all-time top scorer, 5 Ballon d'Ors, still going strong."
+  }
+]

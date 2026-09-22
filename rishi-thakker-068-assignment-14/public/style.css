@@ -1,0 +1,168 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.panel {
+  max-width: 480px;
+  margin: 60px auto;
+  padding: 24px;
+  background: white;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.panel input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 15px;
+}
+
+.panel button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 14px;
+  font-size: 15px;
+  background: #4a76a8;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.errorText {
+  color: #c0392b;
+  margin-top: 10px;
+}
+
+/* ---------- Portal ---------- */
+
+.portal {
+  max-width: 320px;
+  margin: 100px auto;
+  text-align: center;
+}
+
+.portalButton {
+  display: block;
+  margin-top: 14px;
+  padding: 12px;
+  background: #4a76a8;
+  color: white;
+  text-decoration: none;
+  border: 1px solid #345;
+}
+
+/* ---------- PIN / lobby ---------- */
+
+.pin {
+  font-size: 42px;
+  font-weight: bold;
+  letter-spacing: 6px;
+  margin: 10px 0;
+}
+
+.playerList {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+}
+
+.playerList li {
+  padding: 6px 10px;
+  border-bottom: 1px solid #eee;
+}
+
+/* ---------- Question ---------- */
+
+.questionMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.timer {
+  font-weight: bold;
+}
+
+.optionsList {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+}
+
+.optionsList li {
+  padding: 8px;
+  border: 1px solid #ddd;
+  margin-bottom: 6px;
+}
+
+.optionsList li.correctOption {
+  background: #d4edda;
+  border-color: #2e7d32;
+  font-weight: bold;
+}
+
+/* ---------- Answer grid (player) ---------- */
+
+.answerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.answerButton {
+  padding: 30px 10px;
+  font-size: 15px;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.answerButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.color0 { background: #e21b3c; }
+.color1 { background: #1368ce; }
+.color2 { background: #d89e00; }
+.color3 { background: #26890c; }
+
+/* ---------- Results / leaderboard ---------- */
+
+.correctAnswer {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.explanation {
+  color: #555;
+}
+
+.leaderboardList {
+  text-align: left;
+  padding-left: 20px;
+}
+
+.nextHint {
+  color: #888;
+  font-size: 13px;
+}
+
+.winnerText {
+  font-size: 20px;
+  font-weight: bold;
+}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Battle - Player</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="player">
+
+  <div id="joinSection" class="panel">
+    <h1>Join a Quiz</h1>
+    <input id="pinInput" type="text" placeholder="4-digit PIN" maxlength="4" inputmode="numeric" />
+    <input id="playerNameInput" type="text" placeholder="Your name" />
+    <button id="joinButton">Join</button>
+    <p id="joinError" class="errorText"></p>
+  </div>
+
+  <div id="waitingSection" class="panel hidden">
+    <h2>You're in!</h2>
+    <p>Waiting for the host to start the game...</p>
+    <h3>Players</h3>
+    <ul id="lobbyPlayerList" class="playerList"></ul>
+  </div>
+
+  <div id="questionSection" class="panel hidden">
+    <div class="questionMeta">
+      <span id="questionProgress"></span>
+      <span id="timerDisplay" class="timer"></span>
+    </div>
+    <h2 id="questionText"></h2>
+    <div id="answerGrid" class="answerGrid">
+      <button class="answerButton color0" data-index="0"></button>
+      <button class="answerButton color1" data-index="1"></button>
+      <button class="answerButton color2" data-index="2"></button>
+      <button class="answerButton color3" data-index="3"></button>
+    </div>
+    <p id="lockedInText" class="hidden">Answer locked in — waiting for the timer...</p>
+  </div>
+
+  <div id="resultsSection" class="panel hidden">
+    <h2 id="feedbackText"></h2>
+    <p id="roundScoreText"></p>
+    <p id="totalScoreText"></p>
+    <p id="explanationText" class="explanation"></p>
+  </div>
+
+  <div id="endedSection" class="panel hidden">
+    <h1>Quiz Over</h1>
+    <p id="winnerText" class="winnerText"></p>
+    <p id="myFinalRankText"></p>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
