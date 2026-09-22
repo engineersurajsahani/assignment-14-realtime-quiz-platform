@@ -228,8 +228,5 @@ This application is ready to deploy on **Render Web Service** with zero database
 | **Health Check Path** | `/health` |
 | **Environment Variables** | `NODE_ENV = production`<br>`CORS_ORIGIN = *` |
 
-> [!NOTE]
-> **Free-Tier Cold Starts:** Render's free tier spins down after ~15 minutes of inactivity. The initial request may take 30–50 seconds to warm up the instance. Before recording a live demo or testing, visit `/health` to wake up the server.
-
----
-
+DEPLOYMENT LINK :
+https://assignment-14-realtime-quiz-platform-hipk.onrender.com/
