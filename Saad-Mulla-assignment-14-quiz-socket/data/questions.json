@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "question": "What is Node.js runtime based on?",
+    "options": ["V8 Engine", "SpiderMonkey", "Chakra", "JVM"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google Chrome's V8 JavaScript engine.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 2,
+    "question": "Which Socket.io method broadcasts to everyone in a room EXCEPT the sender?",
+    "options": ["io.emit()", "socket.to(room).emit()", "io.to(room).emit()", "socket.broadcast.emit()"],
+    "correctOption": 1,
+    "explanation": "socket.to(room).emit() targets all sockets in the given room except the sender.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 3,
+    "question": "In Express.js, what signature is required for standard middleware?",
+    "options": ["(req, res)", "(req, res, next)", "(err, req, res, next)", "(req, next)"],
+    "correctOption": 1,
+    "explanation": "Standard Express middleware functions take (req, res, next).",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 4,
+    "question": "What is the primary benefit of WebSockets over HTTP polling?",
+    "options": ["Higher security", "Full-duplex persistent real-time communication", "Automatic database indexing", "Lower memory usage"],
+    "correctOption": 1,
+    "explanation": "WebSockets maintain a single persistent full-duplex TCP connection.",
+    "timeLimitSeconds": 15
+  }
+]
