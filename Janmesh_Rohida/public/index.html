@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Multiplayer Live Quiz Battle Arena</title>
+  <meta name="description" content="A Kahoot-style real-time multiplayer live quiz battle arena with server-driven countdowns and speed-based scoring.">
+  <link rel="stylesheet" href="styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+
+  <main class="glass-card" style="max-width: 520px; text-align: center;">
+    <h1 class="title-gradient">QUIZ BATTLE</h1>
+    <p style="margin-bottom: 2rem;">Real-Time Multiplayer Trivia Arena</p>
+
+    <!-- Role Choice Buttons -->
+    <div id="role-selector" style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+      <button id="btn-show-player" class="btn btn-primary btn-lg" onclick="showTab('player')">
+        🎮 Join as Player
+      </button>
+      <button id="btn-show-host" class="btn btn-secondary btn-lg" onclick="showTab('host')">
+        👑 Host a Quiz
+      </button>
+    </div>
+
+    <!-- Player Join Form -->
+    <section id="form-player" style="margin-top: 1rem;">
+      <form id="player-join-form" onsubmit="handlePlayerJoin(event)">
+        <div class="form-group">
+          <label for="input-pin">Game PIN</label>
+          <input type="text" id="input-pin" maxlength="4" placeholder="e.g. 8421" pattern="[0-9]{4}" required style="font-size: 1.8rem; text-align: center; letter-spacing: 0.15em; font-weight: 700;">
+        </div>
+
+        <div class="form-group">
+          <label for="input-player-name">Your Nickname</label>
+          <input type="text" id="input-player-name" placeholder="Enter your name..." maxlength="15" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="margin-top: 0.5rem; background: linear-gradient(135deg, #10b981, #059669);">
+          🚀 Enter Battle Arena
+        </button>
+      </form>
+    </section>
+
+    <!-- Host Create Room Form -->
+    <section id="form-host" class="hidden" style="margin-top: 1rem;">
+      <form id="host-create-form" onsubmit="handleHostCreate(event)">
+        <div class="form-group">
+          <label for="input-host-name">Host / Organization Name</label>
+          <input type="text" id="input-host-name" placeholder="e.g. Quizmaster Alex" maxlength="20" required value="Quizmaster Alex">
+        </div>
+
+        <div class="form-group">
+          <label for="select-category">Quiz Category</label>
+          <select id="select-category">
+            <option value="All Categories">All Categories (5 Questions)</option>
+            <option value="Web & Real-Time Technologies">Web & Real-Time Technologies</option>
+            <option value="JavaScript Engine">JavaScript Engine</option>
+            <option value="Node.js Fundamentals">Node.js Fundamentals</option>
+            <option value="Network & Protocols">Network & Protocols</option>
+            <option value="Database & Data Models">Database & Data Models</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="margin-top: 0.5rem;">
+          ✨ Initialize New Game Room
+        </button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    function showTab(role) {
+      const playerForm = document.getElementById('form-player');
+      const hostForm = document.getElementById('form-host');
+      const btnPlayer = document.getElementById('btn-show-player');
+      const btnHost = document.getElementById('btn-show-host');
+
+      if (role === 'player') {
+        playerForm.classList.remove('hidden');
+        hostForm.classList.add('hidden');
+        btnPlayer.className = 'btn btn-primary btn-lg';
+        btnHost.className = 'btn btn-secondary btn-lg';
+      } else {
+        playerForm.classList.add('hidden');
+        hostForm.classList.remove('hidden');
+        btnPlayer.className = 'btn btn-secondary btn-lg';
+        btnHost.className = 'btn btn-primary btn-lg';
+      }
+    }
+
+    function handlePlayerJoin(e) {
+      e.preventDefault();
+      const pin = document.getElementById('input-pin').value.trim();
+      const name = document.getElementById('input-player-name').value.trim();
+      if (!pin || !name) return;
+
+      // Redirect to player.html with query parameters
+      window.location.href = `player.html?pin=${encodeURIComponent(pin)}&name=${encodeURIComponent(name)}`;
+    }
+
+    function handleHostCreate(e) {
+      e.preventDefault();
+      const hostName = document.getElementById('input-host-name').value.trim();
+      const category = document.getElementById('select-category').value;
+
+      // Redirect to host.html with query parameters
+      window.location.href = `host.html?hostName=${encodeURIComponent(hostName)}&category=${encodeURIComponent(category)}`;
+    }
+  </script>
+
+</body>
+</html>

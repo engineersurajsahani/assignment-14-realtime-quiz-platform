@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player Game Pad - Live Quiz Battle</title>
+  <meta name="description" content="Mobile-friendly Kahoot-style answer grid game pad for live quiz battles.">
+  <link rel="stylesheet" href="styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body style="padding: 1rem;">
+
+  <!-- ================= LOBBY WAITING SCREEN ================= -->
+  <main id="view-waiting" class="glass-card" style="max-width: 480px; text-align: center;">
+    <h2 class="title-gradient">YOU'RE IN THE LOBBY!</h2>
+    <p id="player-welcome" style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin: 1rem 0;">Connecting...</p>
+
+    <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📱</div>
+      <h3 style="color: var(--text-main); margin-bottom: 0.5rem;">Look at the Shared Host Screen</h3>
+      <p style="font-size: 0.95rem;">Questions and options will be displayed on the host screen. Tap the matching colored button on your device as fast as you can!</p>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; color: #38bdf8;">
+      <span style="animation: pulse 1.5s infinite;">⌛</span>
+      <span style="font-weight: 600;">Waiting for Quiz Host to start...</span>
+    </div>
+  </main>
+
+  <!-- ================= QUESTION ANSWER GRID ================= -->
+  <main id="view-question" class="glass-card hidden" style="max-width: 480px;">
+    <!-- Top Stats Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <div>
+        <span id="player-q-num" style="font-weight: 800; color: var(--accent-cyan);">Q 1/5</span>
+      </div>
+      <div class="timer-badge" style="font-size: 1.1rem; padding: 0.35rem 0.9rem;">
+        ⏱ <span id="player-timer-text">15s</span>
+      </div>
+    </div>
+
+    <!-- Timer Bar -->
+    <div class="timer-bar-container" style="height: 6px; margin-bottom: 1.25rem;">
+      <div id="player-timer-bar" class="timer-bar-fill"></div>
+    </div>
+
+    <!-- Question Title Text (Compact for Mobile) -->
+    <h3 id="player-q-text" style="color: #ffffff; font-size: 1.1rem; text-align: center; margin-bottom: 1.25rem; min-height: 2.5em; display: flex; align-items: center; justify-content: center;">
+      Question Text...
+    </h3>
+
+    <!-- 4 Large Kahoot Colored Answer Buttons -->
+    <div class="answer-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <button id="btn-opt-0" class="option-btn color-0" onclick="submitPlayerAnswer(0)" style="padding: 2.25rem 1rem; flex-direction: column; text-align: center;">
+        <span class="shape-icon" style="font-size: 1.5rem; width: 42px; height: 42px;">▲</span>
+        <span id="p-text-0" style="font-size: 1rem; font-weight: 700;">Option 1</span>
+      </button>
+
+      <button id="btn-opt-1" class="option-btn color-1" onclick="submitPlayerAnswer(1)" style="padding: 2.25rem 1rem; flex-direction: column; text-align: center;">
+        <span class="shape-icon" style="font-size: 1.5rem; width: 42px; height: 42px;">◆</span>
+        <span id="p-text-1" style="font-size: 1rem; font-weight: 700;">Option 2</span>
+      </button>
+
+      <button id="btn-opt-2" class="option-btn color-2" onclick="submitPlayerAnswer(2)" style="padding: 2.25rem 1rem; flex-direction: column; text-align: center;">
+        <span class="shape-icon" style="font-size: 1.5rem; width: 42px; height: 42px;">●</span>
+        <span id="p-text-2" style="font-size: 1rem; font-weight: 700;">Option 3</span>
+      </button>
+
+      <button id="btn-opt-3" class="option-btn color-3" onclick="submitPlayerAnswer(3)" style="padding: 2.25rem 1rem; flex-direction: column; text-align: center;">
+        <span class="shape-icon" style="font-size: 1.5rem; width: 42px; height: 42px;">■</span>
+        <span id="p-text-3" style="font-size: 1rem; font-weight: 700;">Option 4</span>
+      </button>
+    </div>
+
+    <!-- Status Banner after submitting -->
+    <div id="status-submitted" class="hidden" style="text-align: center; padding: 0.75rem; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-cyan); border-radius: var(--radius-md); color: #38bdf8; font-weight: 700;">
+      🔒 Answer Submitted! Waiting for reveal...
+    </div>
+  </main>
+
+  <!-- ================= RESULT / FEEDBACK VIEW ================= -->
+  <main id="view-result" class="glass-card hidden" style="max-width: 480px; text-align: center;">
+    <div id="result-feedback-box" class="feedback-box">
+      <div id="feedback-icon" style="font-size: 3.5rem; margin-bottom: 0.5rem;">✔️</div>
+      <h2 id="feedback-title" style="font-size: 2rem; margin-bottom: 0.5rem;">CORRECT!</h2>
+      <p id="feedback-points" style="font-size: 1.5rem; font-weight: 800; color: #ffffff;">+850 Points</p>
+    </div>
+
+    <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+      <div style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Your Current Rank</div>
+      <div id="player-current-rank" style="font-size: 2.25rem; font-weight: 900; color: #38bdf8;">#1</div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-top: 0.25rem;">
+        Total Score: <span id="player-total-score" style="color: #4ade80;">0</span> pts
+      </div>
+    </div>
+
+    <p style="font-size: 0.9rem; font-style: italic; color: var(--text-muted);">Get ready for the next round!</p>
+  </main>
+
+  <!-- ================= FINAL PLAYER WINNER / RESULT SCREEN ================= -->
+  <main id="view-final" class="glass-card hidden" style="max-width: 480px; text-align: center;">
+    <h1 class="title-gradient">GAME OVER!</h1>
+    <p style="margin-bottom: 1.5rem;">Final Quiz Battle Results</p>
+
+    <div id="final-podium-card" style="padding: 1.5rem; border-radius: var(--radius-md); background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border-glass); margin-bottom: 1.5rem;">
+      <div id="final-emoji" style="font-size: 3.5rem;">🎖️</div>
+      <h2 id="final-place-text" style="font-size: 2rem; color: #fbbf24; margin: 0.5rem 0;">You Placed 1st!</h2>
+      <p id="final-score-text" style="font-size: 1.25rem; font-weight: 800; color: #ffffff;">Score: 0 pts</p>
+    </div>
+
+    <button class="btn btn-primary btn-lg" onclick="window.location.href='index.html'">
+      🏠 Return to Lobby Portal
+    </button>
+  </main>
+
+  <script>
+    let currentPin = null;
+    let playerName = null;
+    let questionStartTime = 0;
+    let hasAnsweredCurrentQ = false;
+    let timerInterval = null;
+
+    // Parse URL Params
+    const urlParams = new URLSearchParams(window.location.search);
+    currentPin = urlParams.get('pin');
+    playerName = urlParams.get('name');
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!currentPin || !playerName) {
+        showNotification('Missing PIN or Name. Returning to portal...', 'error');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+        return;
+      }
+
+      document.getElementById('player-welcome').innerText = `Welcome, ${escapeHtml(playerName)}!`;
+
+      // Emit quiz:join
+      socket.emit('quiz:join', {
+        pin: currentPin,
+        playerName: playerName
+      });
+    });
+
+    // 1. Join Confirmation
+    socket.on('quiz:joined', (data) => {
+      showNotification(`Joined room PIN ${data.pin} successfully!`, 'success');
+      document.getElementById('player-welcome').innerText = `Welcome, ${escapeHtml(playerName)}!`;
+    });
+
+    // Join Error Handler
+    socket.on('error:join', (data) => {
+      showNotification(data.message || 'Failed to join room.', 'error');
+      setTimeout(() => window.location.href = 'index.html', 2500);
+    });
+
+    // 2. Question Start Handler
+    socket.on('question:start', (data) => {
+      showView('question');
+
+      document.getElementById('player-q-num').innerText = `Q ${data.questionIndex + 1}/${data.totalQuestions}`;
+      document.getElementById('player-q-text').innerText = data.question;
+      document.getElementById('status-submitted').classList.add('hidden');
+
+      questionStartTime = Date.now();
+      hasAnsweredCurrentQ = false;
+
+      // Enable and populate buttons
+      data.options.forEach((optText, index) => {
+        const btn = document.getElementById(`btn-opt-${index}`);
+        const textSpan = document.getElementById(`p-text-${index}`);
+        if (btn && textSpan) {
+          textSpan.innerText = optText;
+          btn.disabled = false;
+          btn.style.opacity = '1';
+        }
+      });
+
+      // Timer setup
+      if (timerInterval) clearInterval(timerInterval);
+      const timerBar = document.getElementById('player-timer-bar');
+      const timerText = document.getElementById('player-timer-text');
+      timerInterval = startClientTimer(timerBar, timerText, data.timeLimitSeconds, () => {
+        // Disable buttons on timer expiration
+        disableAllOptions();
+      });
+    });
+
+    // 3. Player Submit Answer Action
+    function submitPlayerAnswer(selectedIndex) {
+      if (hasAnsweredCurrentQ) return;
+      hasAnsweredCurrentQ = true;
+
+      const timeTakenMs = Date.now() - questionStartTime;
+
+      // Anti-cheat / instant UI lock: disable buttons immediately
+      disableAllOptions();
+      document.getElementById('status-submitted').classList.remove('hidden');
+
+      socket.emit('answer:submit', {
+        pin: currentPin,
+        selectedOption: selectedIndex,
+        timeTakenMs: timeTakenMs
+      });
+    }
+
+    function disableAllOptions() {
+      for (let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`btn-opt-${i}`);
+        if (btn) {
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+        }
+      }
+    }
+
+    // 4. Private Answer Acknowledgment
+    socket.on('answer:ack', (data) => {
+      console.log('[ACK] Answer received:', data);
+    });
+
+    // Error on answer submission
+    socket.on('error:answer', (data) => {
+      showNotification(data.message, 'error');
+    });
+
+    // 5. Time Up / Reveal Results
+    socket.on('question:time_up', (data) => {
+      if (timerInterval) clearInterval(timerInterval);
+    });
+
+    // 6. Leaderboard & Personal Score Update
+    socket.on('leaderboard:update', (data) => {
+      const myRankObj = data.leaderboard.find(item => item.name.toLowerCase() === playerName.toLowerCase());
+
+      setTimeout(() => {
+        showView('result');
+
+        const feedbackBox = document.getElementById('result-feedback-box');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackPoints = document.getElementById('feedback-points');
+
+        if (myRankObj) {
+          document.getElementById('player-current-rank').innerText = `#${myRankObj.rank}`;
+          document.getElementById('player-total-score').innerText = myRankObj.score;
+
+          if (myRankObj.lastAnswerCorrect === true) {
+            feedbackBox.className = 'feedback-box feedback-correct';
+            feedbackIcon.innerText = '🎉';
+            feedbackTitle.innerText = 'CORRECT!';
+            feedbackPoints.innerText = `+${myRankObj.lastPointsGained} Points`;
+          } else {
+            feedbackBox.className = 'feedback-box feedback-incorrect';
+            feedbackIcon.innerText = '❌';
+            feedbackTitle.innerText = 'INCORRECT';
+            feedbackPoints.innerText = '+0 Points';
+          }
+        }
+      }, 1500);
+    });
+
+    // 7. Quiz Ended Handler
+    socket.on('quiz:ended', (data) => {
+      if (timerInterval) clearInterval(timerInterval);
+      showView('final');
+
+      const myRankObj = data.finalRanks.find(item => item.name.toLowerCase() === playerName.toLowerCase());
+
+      const placeText = document.getElementById('final-place-text');
+      const scoreText = document.getElementById('final-score-text');
+      const emojiElem = document.getElementById('final-emoji');
+
+      if (myRankObj) {
+        placeText.innerText = `You Placed #${myRankObj.rank}!`;
+        scoreText.innerText = `Final Score: ${myRankObj.score} pts`;
+
+        if (myRankObj.rank === 1) {
+          emojiElem.innerText = '🏆';
+          placeText.innerText = '🥇 YOU WON THE BATTLE!';
+        } else if (myRankObj.rank === 2) {
+          emojiElem.innerText = '🥈';
+        } else if (myRankObj.rank === 3) {
+          emojiElem.innerText = '🥉';
+        } else {
+          emojiElem.innerText = '🎮';
+        }
+      } else {
+        placeText.innerText = 'Quiz Completed';
+        scoreText.innerText = 'Score: 0 pts';
+      }
+    });
+
+    // View Switcher
+    function showView(viewName) {
+      document.getElementById('view-waiting').classList.add('hidden');
+      document.getElementById('view-question').classList.add('hidden');
+      document.getElementById('view-result').classList.add('hidden');
+      document.getElementById('view-final').classList.add('hidden');
+
+      document.getElementById(`view-${viewName}`).classList.remove('hidden');
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+  </script>
+
+</body>
+</html>
