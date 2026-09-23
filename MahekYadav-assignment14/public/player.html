@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Player</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page player-page">
+    <header class="topbar"><a href="/">⚡ Quiz Battle</a><span>PLAYER</span></header>
+
+    <section id="joinPanel" class="card narrow">
+      <h1>Join Quiz</h1>
+      <p class="muted">Enter the PIN shown on the host screen.</p>
+      <form id="joinForm" class="form-grid">
+        <label>Game PIN<input id="joinPin" required inputmode="numeric" maxlength="4" placeholder="8421" /></label>
+        <label>Your name<input id="playerName" required maxlength="30" placeholder="Karan" /></label>
+        <button class="button primary" type="submit">Join Lobby</button>
+      </form>
+    </section>
+
+    <section id="playerGame" class="hidden">
+      <div class="card player-header"><div><span class="muted">Playing as</span><strong id="myName">Player</strong></div><div><span class="muted">Score</span><strong id="myScore">0</strong></div></div>
+      <section class="card" id="lobbyPanel">
+        <div class="pin-card compact"><span>GAME PIN</span><strong id="playerPin">----</strong></div>
+        <h2>Waiting for host to start...</h2>
+        <div id="lobbyPlayers" class="player-list"></div>
+      </section>
+      <section class="card hidden" id="playPanel">
+        <div class="question-meta"><span id="playerQuestionNumber">Question 1/5</span><span id="playerTimer">15</span></div>
+        <h1 id="playerQuestion">Question</h1>
+        <div id="answerGrid" class="answer-grid"></div>
+        <p id="answerStatus" class="result"></p>
+      </section>
+      <section class="card">
+        <h2>Leaderboard</h2>
+        <div id="playerLeaderboard" class="leaderboard"><p class="muted">Scores will appear after each round.</p></div>
+      </section>
+    </section>
+
+    <div id="toast" class="toast"></div>
+  </main>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
