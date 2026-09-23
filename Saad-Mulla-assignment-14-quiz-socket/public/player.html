@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Player Gamepad</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #0f172a; color: #fff; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; width: 100%; max-width: 400px; text-align: center; }
+    input { width: 100%; padding: 0.8rem; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; margin-bottom: 1rem; font-size: 1rem; }
+    .btn { width: 100%; padding: 0.8rem; background: #0284c7; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .pad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 500px; height: 300px; margin-top: 1rem; }
+    .pad-btn { border: none; border-radius: 12px; font-size: 1.5rem; font-weight: bold; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .pad-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pad-0 { background: #ef4444; } .pad-1 { background: #3b82f6; }
+    .pad-2 { background: #eab308; } .pad-3 { background: #22c55e; }
+    .hidden { display: none !important; }
+    .status-msg { font-size: 1.2rem; font-weight: bold; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <!-- Login Form -->
+  <div id="join-card" class="card">
+    <h2 style="color: #38bdf8; margin-bottom: 1rem;">Join Quiz Battle</h2>
+    <input type="text" id="pin-input" placeholder="4-Digit PIN" maxlength="4" autofocus />
+    <input type="text" id="name-input" placeholder="Your Player Name" maxlength="15" />
+    <button id="join-btn" class="btn">Enter Lobby</button>
+  </div>
+
+  <!-- Waiting Room -->
+  <div id="wait-card" class="card hidden">
+    <h2>You're in!</h2>
+    <p style="color: #94a3b8; margin-top: 0.5rem;">Look at the host screen. Game starting soon...</p>
+  </div>
+
+  <!-- Gamepad View -->
+  <div id="gamepad-view" class="hidden" style="width: 100%; max-width: 500px; text-align: center;">
+    <h3 id="round-status">Select your answer!</h3>
+    <div class="pad-grid">
+      <button class="pad-btn pad-0" onclick="submitAnswer(0)">▲</button>
+      <button class="pad-btn pad-1" onclick="submitAnswer(1)">◆</button>
+      <button class="pad-btn pad-2" onclick="submitAnswer(2)">●</button>
+      <button class="pad-btn pad-3" onclick="submitAnswer(3)">■</button>
+    </div>
+  </div>
+
+  <!-- Answer Result Overlay -->
+  <div id="result-card" class="card hidden">
+    <div id="result-text" class="status-msg"></div>
+    <div id="score-text" style="margin-top: 0.5rem; color: #94a3b8;"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let currentPin = '';
+    let questionStartTime = 0;
+
+    const joinCard = document.getElementById('join-card');
+    const waitCard = document.getElementById('wait-card');
+    const gamepadView = document.getElementById('gamepad-view');
+    const resultCard = document.getElementById('result-card');
+
+    document.getElementById('join-btn').addEventListener('click', () => {
+      const pin = document.getElementById('pin-input').value.trim();
+      const playerName = document.getElementById('name-input').value.trim();
+
+      if (!pin || !playerName) return alert('Enter PIN and Name');
+
+      currentPin = pin;
+      socket.emit('quiz:join', { pin, playerName });
+    });
+
+    socket.on('quiz:joined', () => {
+      joinCard.classList.add('hidden');
+      waitCard.classList.remove('hidden');
+    });
+
+    socket.on('error:message', (data) => alert(data.message));
+
+    socket.on('question:start', () => {
+      waitCard.classList.add('hidden');
+      resultCard.classList.add('hidden');
+      gamepadView.classList.remove('hidden');
+
+      questionStartTime = Date.now();
+      enablePad(true);
+    });
+
+    function submitAnswer(optionIndex) {
+      const timeTakenMs = Date.now() - questionStartTime;
+      socket.emit('answer:submit', {
+        pin: currentPin,
+        selectedOption: optionIndex,
+        timeTakenMs
+      });
+      enablePad(false);
+      document.getElementById('round-status').textContent = "Answer Submitted! Waiting for timer...";
+    }
+
+    function enablePad(enabled) {
+      document.querySelectorAll('.pad-btn').forEach(btn => btn.disabled = !enabled);
+    }
+
+    socket.on('answer:result', (data) => {
+      gamepadView.classList.add('hidden');
+      resultCard.classList.remove('hidden');
+
+      const resText = document.getElementById('result-text');
+      if (data.isCorrect) {
+        resText.textContent = "✅ Correct!";
+        resText.style.color = "#22c55e";
+      } else {
+        resText.textContent = "❌ Incorrect";
+        resText.style.color = "#ef4444";
+      }
+      document.getElementById('score-text').textContent = `+${data.scoreEarned} pts (Total: ${data.totalScore || 0})`;
+    });
+
+    socket.on('quiz:ended', (data) => {
+      gamepadView.classList.add('hidden');
+      resultCard.classList.remove('hidden');
+      document.getElementById('result-text').textContent = "🏆 Quiz Ended!";
+      document.getElementById('result-text').style.color = "#38bdf8";
+      document.getElementById('score-text').textContent = `Winner: ${data.winner.name} (${data.winner.score} pts)`;
+    });
+  </script>
+</body>
+</html>
