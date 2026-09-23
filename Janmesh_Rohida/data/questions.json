@@ -1,0 +1,67 @@
+[
+  {
+    "id": 1,
+    "category": "Web & Real-Time Technologies",
+    "question": "Which underlying protocol enables low-latency bi-directional communication in Socket.io?",
+    "options": [
+      "HTTP/1.1 Long Polling fallback & WebSocket",
+      "FTP Direct Data Transport",
+      "SMTP Mail Transfer Protocol",
+      "UDP Datagram Streaming"
+    ],
+    "correctOption": 0,
+    "explanation": "Socket.io utilizes WebSockets for real-time bi-directional transport, with HTTP Long-Polling as a reliable fallback."
+  },
+  {
+    "id": 2,
+    "category": "JavaScript Engine",
+    "question": "In JavaScript, what mechanism handles asynchronous callbacks and non-blocking I/O operations?",
+    "options": [
+      "The Synchronous Heap Memory",
+      "The Event Loop and Callback Queue",
+      "The CPU Instruction Cache",
+      "The Garbage Collector Thread"
+    ],
+    "correctOption": 1,
+    "explanation": "The Event Loop continuously monitors the Call Stack and Callback Queue to execute async functions when the stack is empty."
+  },
+  {
+    "id": 3,
+    "category": "Node.js Fundamentals",
+    "question": "Which core Node.js module provides the capability to handle HTTP requests and build web servers?",
+    "options": [
+      "fs",
+      "path",
+      "http",
+      "events"
+    ],
+    "correctOption": 2,
+    "explanation": "The built-in 'http' module allows Node.js to transfer data over HTTP and create web servers."
+  },
+  {
+    "id": 4,
+    "category": "Network & Protocols",
+    "question": "What is the standard HTTP response status code for '200 OK' vs '404 Not Found'?",
+    "options": [
+      "200 means Success, 404 means Resource Not Found",
+      "200 means Unauthorized, 404 means Server Error",
+      "200 means Redirect, 404 means Success",
+      "200 means Created, 404 means Bad Gateway"
+    ],
+    "correctOption": 0,
+    "explanation": "200 OK indicates a successful HTTP request, while 404 indicates the requested URI could not be found on the server."
+  },
+  {
+    "id": 5,
+    "category": "Database & Data Models",
+    "question": "What key property distinguishes In-Memory data stores (like Redis) from disk-backed databases?",
+    "options": [
+      "In-Memory stores write data only to physical tape drives",
+      "In-Memory stores keep data in RAM for sub-millisecond read/write access",
+      "In-Memory stores cannot perform mathematical sorting operations",
+      "In-Memory stores require SQL schema definitions for every key"
+    ],
+    "correctOption": 1,
+    "explanation": "In-Memory data engines store data directly in RAM, giving ultra-fast responses perfect for real-time game state tracking."
+  }
+]

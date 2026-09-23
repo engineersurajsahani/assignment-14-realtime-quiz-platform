@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Host Control Dashboard - Live Quiz Battle</title>
+  <meta name="description" content="Host control screen with live PIN display, player roster, synchronized questions and live leaderboard.">
+  <link rel="stylesheet" href="styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+
+  <!-- ================= LOBBY VIEW ================= -->
+  <main id="view-lobby" class="glass-card" style="text-align: center;">
+    <h1 class="title-gradient">HOST CONTROL CENTER</h1>
+    <p id="host-subtitle">Initializing room...</p>
+
+    <div class="pin-display">
+      <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">JOIN AT PLAY.QUIZ / GAME PIN</div>
+      <div id="display-pin" class="pin-code">----</div>
+    </div>
+
+    <div style="margin: 1.5rem 0;">
+      <h3>CONNECTED PLAYERS (<span id="player-count">0</span>)</h3>
+      <div id="player-roster" class="player-roster">
+        <p style="color: var(--text-muted); font-style: italic;" id="no-players-msg">Waiting for players to join using the PIN above...</p>
+      </div>
+    </div>
+
+    <button id="btn-start-game" class="btn btn-primary btn-lg" disabled onclick="handleStartGame()">
+      ▶ Start Game (Requires at least 1 Player)
+    </button>
+  </main>
+
+  <!-- ================= QUESTION ARENA VIEW ================= -->
+  <main id="view-question" class="glass-card hidden">
+    <!-- Header: Question metadata & Timer -->
+    <div class="timer-container">
+      <div>
+        <span id="question-progress" style="font-weight: 800; font-size: 1.2rem; color: var(--accent-cyan);">Question 1 / 5</span>
+        <span id="question-category" style="margin-left: 1rem; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Category</span>
+      </div>
+      <div class="timer-badge">
+        ⏱ <span id="host-timer-text">15s</span>
+      </div>
+    </div>
+
+    <!-- Animated Countdown Progress Bar -->
+    <div class="timer-bar-container">
+      <div id="host-timer-bar" class="timer-bar-fill"></div>
+    </div>
+
+    <!-- Big Question Text Box -->
+    <div class="question-box">
+      <div id="display-question-text" class="question-text">Loading question...</div>
+    </div>
+
+    <!-- 4-Color Options Display Grid -->
+    <div class="answer-grid">
+      <div id="opt-0" class="option-btn color-0">
+        <span class="shape-icon">▲</span>
+        <span id="opt-text-0" class="opt-text">Option 1</span>
+      </div>
+      <div id="opt-1" class="option-btn color-1">
+        <span class="shape-icon">◆</span>
+        <span id="opt-text-1" class="opt-text">Option 2</span>
+      </div>
+      <div id="opt-2" class="option-btn color-2">
+        <span class="shape-icon">●</span>
+        <span id="opt-text-2" class="opt-text">Option 3</span>
+      </div>
+      <div id="opt-3" class="option-btn color-3">
+        <span class="shape-icon">■</span>
+        <span id="opt-text-3" class="opt-text">Option 4</span>
+      </div>
+    </div>
+
+    <!-- Live Answer Counter -->
+    <div style="text-align: center; margin-top: 1rem; font-weight: 700; color: var(--text-muted);">
+      Answers Submitted: <span id="answered-counter" style="color: #38bdf8; font-size: 1.2rem;">0</span> / <span id="total-players-counter">0</span>
+    </div>
+
+    <!-- Explanation Box (Shown during time_up reveal) -->
+    <div id="explanation-box" class="feedback-box feedback-correct hidden" style="margin-top: 1.5rem; text-align: left;">
+      <h4 style="font-weight: 800; font-size: 1.1rem; margin-bottom: 0.25rem;">💡 Explanation & Key Insight</h4>
+      <p id="explanation-text" style="color: #ffffff; font-size: 1rem;"></p>
+    </div>
+  </main>
+
+  <!-- ================= LEADERBOARD VIEW ================= -->
+  <main id="view-leaderboard" class="glass-card hidden" style="text-align: center;">
+    <h2 class="title-gradient" style="font-size: 2.2rem; margin-bottom: 0.5rem;">ROUND LEADERBOARD</h2>
+    <p style="margin-bottom: 1.5rem;">Updated Live Standings</p>
+
+    <ul id="leaderboard-list" class="leaderboard-list">
+      <!-- Dynamic Ranks Populated Here -->
+    </ul>
+
+    <p style="font-style: italic; color: var(--text-muted); font-size: 0.95rem;">Next question round starting automatically in 5 seconds...</p>
+  </main>
+
+  <!-- ================= FINAL WINNER SCREEN ================= -->
+  <main id="view-winner" class="glass-card hidden" style="text-align: center;">
+    <h1 class="title-gradient" style="font-size: 3rem; margin-bottom: 0.5rem;">🏆 CHAMPION ANNOUNCED 🏆</h1>
+    <p style="margin-bottom: 2rem;">Quiz Battle Finished!</p>
+
+    <div id="winner-podium" style="background: rgba(245, 158, 11, 0.15); border: 2px solid #f59e0b; border-radius: var(--radius-md); padding: 2rem; margin-bottom: 2rem; animation: popIn 0.5s ease;">
+      <div style="font-size: 3.5rem;">👑</div>
+      <h2 id="winner-name" style="font-size: 2.5rem; color: #fbbf24; margin: 0.5rem 0;">Winner Name</h2>
+      <p style="font-size: 1.5rem; font-weight: 800; color: #ffffff;">Final Score: <span id="winner-score" style="color: #38bdf8;">0</span> pts</p>
+    </div>
+
+    <div style="text-align: left; margin-bottom: 2rem;">
+      <h3 style="margin-bottom: 1rem; text-align: center;">FINAL STANDINGS</h3>
+      <ul id="final-leaderboard-list" class="leaderboard-list"></ul>
+    </div>
+
+    <button class="btn btn-primary btn-lg" onclick="window.location.href='index.html'">
+      🔄 Host Another Battle
+    </button>
+  </main>
+
+  <script>
+    let currentPin = null;
+    let timerInterval = null;
+
+    // Parse URL Query Parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const hostNameParam = urlParams.get('hostName') || 'Quiz Host';
+    const categoryParam = urlParams.get('category') || 'All Categories';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Connect as Host
+      socket.emit('quiz:create', {
+        hostName: hostNameParam,
+        category: categoryParam
+      });
+    });
+
+    // 1. Host Room Created Handler
+    socket.on('quiz:created', (data) => {
+      currentPin = data.pin;
+      document.getElementById('display-pin').innerText = data.pin;
+      document.getElementById('host-subtitle').innerText = `Category: ${data.category} (${data.totalQuestions} Questions)`;
+      showNotification(`Room initialized! PIN: ${data.pin}`, 'success');
+    });
+
+    // 2. Lobby Roster Update
+    socket.on('lobby:update', (data) => {
+      const rosterContainer = document.getElementById('player-roster');
+      const countElem = document.getElementById('player-count');
+      const startBtn = document.getElementById('btn-start-game');
+
+      countElem.innerText = data.players.length;
+
+      if (data.players.length === 0) {
+        rosterContainer.innerHTML = '<p style="color: var(--text-muted); font-style: italic;">Waiting for players to join using the PIN above...</p>';
+        startBtn.disabled = true;
+        startBtn.innerText = '▶ Start Game (Requires at least 1 Player)';
+      } else {
+        rosterContainer.innerHTML = data.players.map(p => `
+          <div class="player-chip">🎮 ${escapeHtml(p.name)}</div>
+        `).join('');
+        startBtn.disabled = false;
+        startBtn.innerText = `▶ Start Game (${data.players.length} Player${data.players.length > 1 ? 's' : ''} Ready)`;
+      }
+    });
+
+    // 3. Start Game Action
+    function handleStartGame() {
+      if (!currentPin) return;
+      socket.emit('quiz:start', { pin: currentPin });
+    }
+
+    // 4. Question Start Handler
+    socket.on('question:start', (data) => {
+      // Switch to Question View
+      showView('question');
+
+      document.getElementById('question-progress').innerText = `Question ${data.questionIndex + 1} of ${data.totalQuestions}`;
+      document.getElementById('question-category').innerText = data.category || 'Trivia';
+      document.getElementById('display-question-text').innerText = data.question;
+
+      document.getElementById('answered-counter').innerText = '0';
+      document.getElementById('explanation-box').classList.add('hidden');
+
+      // Populate options
+      data.options.forEach((optText, index) => {
+        const btn = document.getElementById(`opt-${index}`);
+        const textSpan = document.getElementById(`opt-text-${index}`);
+        if (btn && textSpan) {
+          textSpan.innerText = optText;
+          btn.className = `option-btn color-${index}`;
+        }
+      });
+
+      // Reset client timer
+      if (timerInterval) clearInterval(timerInterval);
+      const timerBar = document.getElementById('host-timer-bar');
+      const timerText = document.getElementById('host-timer-text');
+      timerInterval = startClientTimer(timerBar, timerText, data.timeLimitSeconds);
+    });
+
+    // Live Player Answer Progress
+    socket.on('host:player_answered', (data) => {
+      document.getElementById('answered-counter').innerText = data.answeredCount;
+      document.getElementById('total-players-counter').innerText = data.totalPlayers;
+    });
+
+    // 5. Time Up / Reveal Correct Answer
+    socket.on('question:time_up', (data) => {
+      if (timerInterval) clearInterval(timerInterval);
+
+      // Highlight correct answer button
+      data.options && data.options.forEach((_, idx) => {
+        const btn = document.getElementById(`opt-${idx}`);
+        if (btn) {
+          if (idx === data.correctOption) {
+            btn.classList.add('correct-reveal');
+          } else {
+            btn.classList.add('incorrect-reveal');
+          }
+        }
+      });
+
+      // Show explanation
+      const expBox = document.getElementById('explanation-box');
+      const expText = document.getElementById('explanation-text');
+      expText.innerText = data.explanation || 'No detailed explanation provided.';
+      expBox.classList.remove('hidden');
+    });
+
+    // 6. Leaderboard Update Handler
+    socket.on('leaderboard:update', (data) => {
+      setTimeout(() => {
+        showView('leaderboard');
+        const listElem = document.getElementById('leaderboard-list');
+        listElem.innerHTML = data.leaderboard.map(item => `
+          <li class="leaderboard-item rank-${item.rank}">
+            <div class="player-info">
+              <div class="rank-badge">${item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : '#' + item.rank}</div>
+              <div class="player-name">${escapeHtml(item.name)}</div>
+            </div>
+            <div class="player-score">${item.score} pts ${item.lastPointsGained ? `<span style="font-size:0.85rem; color:#4ade80;">(+${item.lastPointsGained})</span>` : ''}</div>
+          </li>
+        `).join('');
+      }, 2500); // 2.5s delay after answer reveal before showing leaderboard
+    });
+
+    // 7. Quiz Ended Handler
+    socket.on('quiz:ended', (data) => {
+      if (timerInterval) clearInterval(timerInterval);
+      showView('winner');
+
+      const winnerNameElem = document.getElementById('winner-name');
+      const winnerScoreElem = document.getElementById('winner-score');
+
+      if (data.winner) {
+        winnerNameElem.innerText = data.winner.name;
+        winnerScoreElem.innerText = data.winner.score;
+      } else {
+        winnerNameElem.innerText = 'No Participants';
+        winnerScoreElem.innerText = '0';
+      }
+
+      const finalRanksElem = document.getElementById('final-leaderboard-list');
+      finalRanksElem.innerHTML = data.finalRanks.map(item => `
+        <li class="leaderboard-item rank-${item.rank}">
+          <div class="player-info">
+            <div class="rank-badge">#${item.rank}</div>
+            <div class="player-name">${escapeHtml(item.name)}</div>
+          </div>
+          <div class="player-score">${item.score} pts</div>
+        </li>
+      `).join('');
+    });
+
+    // View Switcher Helper
+    function showView(viewName) {
+      document.getElementById('view-lobby').classList.add('hidden');
+      document.getElementById('view-question').classList.add('hidden');
+      document.getElementById('view-leaderboard').classList.add('hidden');
+      document.getElementById('view-winner').classList.add('hidden');
+
+      document.getElementById(`view-${viewName}`).classList.remove('hidden');
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+  </script>
+
+</body>
+</html>
