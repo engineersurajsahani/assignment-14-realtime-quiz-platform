@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Player Pad - QuizBattle</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { padding: 12px; }
+    .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Player Join Screen -->
+  <div id="joinScreen" class="container" style="max-width: 400px; margin-top: 40px;">
+    <div class="card">
+      <span class="logo-badge">🎮</span>
+      <h2>Join Quiz</h2>
+      <p>Enter the 4-digit PIN from the host screen</p>
+
+      <form id="joinForm">
+        <div class="form-group">
+          <label for="playerPin">Game PIN</label>
+          <input type="text" id="playerPin" class="form-control pin-input" maxlength="4" required />
+        </div>
+
+        <div class="form-group">
+          <label for="playerName">Your Name</label>
+          <input type="text" id="playerName" class="form-control" placeholder="e.g. Karan" maxlength="15" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Join Battle</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Player Header Info Bar (Visible during gameplay) -->
+  <div id="playerHeader" class="player-header" style="display: none;">
+    <div>
+      <span style="color: #94a3b8; font-size: 0.8rem;">PLAYER</span>
+      <div id="headerPlayerName" style="font-weight: 700; color: #f8fafc;">Karan</div>
+    </div>
+    <div style="text-align: right;">
+      <span style="color: #94a3b8; font-size: 0.8rem;">SCORE</span>
+      <div id="headerPlayerScore" style="font-weight: 800; color: #ec4899; font-size: 1.1rem;">0 pts</div>
+    </div>
+  </div>
+
+  <!-- 2. Waiting in Lobby Screen -->
+  <div id="waitingScreen" class="container" style="display: none; text-align: center; max-width: 500px; margin-top: 50px;">
+    <div class="card">
+      <div style="font-size: 3.5rem;">🎉</div>
+      <h2 style="color: #10b981; margin: 12px 0;">You're in!</h2>
+      <p>Look up at the host screen. The battle will start shortly.</p>
+    </div>
+  </div>
+
+  <!-- 3. Active 4-Color Answer Pad Screen -->
+  <div id="padScreen" style="display: none;">
+    <div class="player-pad-grid">
+      <button class="pad-btn option-red" data-choice="0">▲</button>
+      <button class="pad-btn option-blue" data-choice="1">◆</button>
+      <button class="pad-btn option-yellow" data-choice="2">●</button>
+      <button class="pad-btn option-green" data-choice="3">■</button>
+    </div>
+  </div>
+
+  <!-- 4. Answer Feedback Screen -->
+  <div id="feedbackScreen" class="container" style="display: none; max-width: 500px;">
+    <div class="card feedback-box">
+      <div class="feedback-icon" id="feedbackIcon">⏳</div>
+      <div class="feedback-title" id="feedbackTitle">Answer Submitted!</div>
+      <div class="feedback-points" id="feedbackPoints">Waiting for question timer...</div>
+    </div>
+  </div>
+
+  <!-- 5. Game Finished Screen -->
+  <div id="playerEndedScreen" class="container" style="display: none; max-width: 500px; text-align: center;">
+    <div class="card">
+      <div style="font-size: 4rem;">🏁</div>
+      <h2>Game Over!</h2>
+      <p style="margin-top: 10px;">Final Score: <strong id="finalScoreText" style="color: #ec4899;">0</strong> pts</p>
+      <a href="player.html" class="btn btn-primary" style="margin-top: 20px;">Play Again</a>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    let pin = "";
+    let playerName = "";
+    let totalScore = 0;
+    let questionStartTime = 0;
+
+    // URL parameters prefill
+    const params = new URLSearchParams(window.location.search);
+    const urlPin = params.get("pin");
+    const urlName = params.get("name");
+
+    const joinScreen = document.getElementById("joinScreen");
+    const joinForm = document.getElementById("joinForm");
+    const playerPinInput = document.getElementById("playerPin");
+    const playerNameInput = document.getElementById("playerName");
+
+    const playerHeader = document.getElementById("playerHeader");
+    const headerPlayerName = document.getElementById("headerPlayerName");
+    const headerPlayerScore = document.getElementById("headerPlayerScore");
+
+    const waitingScreen = document.getElementById("waitingScreen");
+    const padScreen = document.getElementById("padScreen");
+    const feedbackScreen = document.getElementById("feedbackScreen");
+    const feedbackIcon = document.getElementById("feedbackIcon");
+    const feedbackTitle = document.getElementById("feedbackTitle");
+    const feedbackPoints = document.getElementById("feedbackPoints");
+    const playerEndedScreen = document.getElementById("playerEndedScreen");
+
+    if (urlPin) playerPinInput.value = urlPin;
+    if (urlName) playerNameInput.value = urlName;
+
+    // Auto-join if both params exist
+    if (urlPin && urlName) {
+      pin = urlPin.trim();
+      playerName = urlName.trim();
+      socket.emit("quiz:join", { pin, playerName });
+    }
+
+    joinForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      pin = playerPinInput.value.trim();
+      playerName = playerNameInput.value.trim();
+      socket.emit("quiz:join", { pin, playerName });
+    });
+
+    // Joined successfully
+    socket.on("quiz:joined", (data) => {
+      joinScreen.style.display = "none";
+      playerHeader.style.display = "flex";
+      waitingScreen.style.display = "block";
+      headerPlayerName.textContent = playerName;
+      headerPlayerScore.textContent = "0 pts";
+    });
+
+    // Question round starts
+    socket.on("question:start", (data) => {
+      waitingScreen.style.display = "none";
+      feedbackScreen.style.display = "none";
+      padScreen.style.display = "block";
+
+      questionStartTime = Date.now();
+
+      // Enable pad buttons
+      document.querySelectorAll(".pad-btn").forEach((btn) => {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+      });
+    });
+
+    // Handle Pad Click
+    document.querySelectorAll(".pad-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const choice = parseInt(btn.getAttribute("data-choice"), 10);
+        const timeTakenMs = Date.now() - questionStartTime;
+
+        // Disable all buttons immediately
+        document.querySelectorAll(".pad-btn").forEach((b) => {
+          b.disabled = true;
+          b.style.opacity = "0.5";
+        });
+
+        socket.emit("answer:submit", {
+          pin: pin,
+          selectedOption: choice,
+          timeTakenMs: timeTakenMs
+        });
+
+        padScreen.style.display = "none";
+        feedbackScreen.style.display = "block";
+        feedbackIcon.textContent = "🚀";
+        feedbackTitle.textContent = "Answer Locked In!";
+        feedbackPoints.textContent = "Waiting for round results...";
+      });
+    });
+
+    // Immediate personal answer feedback from server
+    socket.on("answer:result", (data) => {
+      totalScore = data.currentScore;
+      headerPlayerScore.textContent = `${totalScore} pts`;
+
+      if (data.correct) {
+        feedbackIcon.textContent = "🎉";
+        feedbackTitle.textContent = "CORRECT!";
+        feedbackTitle.style.color = "#10b981";
+        feedbackPoints.textContent = `+${data.pointsEarned} Points (Speed: ${(data.timeTakenMs / 1000).toFixed(1)}s)`;
+      } else {
+        feedbackIcon.textContent = "❌";
+        feedbackTitle.textContent = "INCORRECT!";
+        feedbackTitle.style.color = "#ef4444";
+        feedbackPoints.textContent = "+0 Points";
+      }
+    });
+
+    // Question time up
+    socket.on("question:time_up", () => {
+      padScreen.style.display = "none";
+      feedbackScreen.style.display = "block";
+    });
+
+    // Quiz ended
+    socket.on("quiz:ended", (data) => {
+      padScreen.style.display = "none";
+      feedbackScreen.style.display = "none";
+      playerEndedScreen.style.display = "block";
+      document.getElementById("finalScoreText").textContent = totalScore;
+    });
+
+    socket.on("quiz:error", (err) => {
+      alert(err.message || "An error occurred");
+    });
+
+    socket.on("answer:error", (err) => {
+      console.warn("Answer warning:", err.message);
+    });
+  </script>
+</body>
+</html>
