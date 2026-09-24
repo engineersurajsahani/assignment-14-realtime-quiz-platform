@@ -1,0 +1,49 @@
+[
+  {
+    "id": 1,
+    "question": "What JavaScript runtime engine is Node.js built upon?",
+    "options": ["V8 Engine", "SpiderMonkey", "Chakra", "JavaScriptCore"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google Chrome's open-source high-performance V8 JavaScript engine."
+  },
+  {
+    "id": 2,
+    "question": "Which protocol provides full-duplex, persistent two-way communication?",
+    "options": ["HTTP/1.1", "WebSocket", "DNS", "FTP"],
+    "correctOption": 1,
+    "explanation": "WebSocket establishes an interactive, persistent bi-directional TCP connection between client and server."
+  },
+  {
+    "id": 3,
+    "question": "Which method in Socket.io joins a client socket to a specific room?",
+    "options": ["socket.enter()", "socket.connectRoom()", "socket.join()", "socket.subscribe()"],
+    "correctOption": 2,
+    "explanation": "socket.join(roomName) is the official Socket.io method used to subscribe a socket to a room channel."
+  },
+  {
+    "id": 4,
+    "question": "What does ACID stand for in database transaction management?",
+    "options": [
+      "Atomicity, Consistency, Isolation, Durability",
+      "Accuracy, Control, Integration, Data",
+      "Async, Concurrent, Indexed, Distributed",
+      "Action, Command, Interface, Domain"
+    ],
+    "correctOption": 0,
+    "explanation": "ACID properties (Atomicity, Consistency, Isolation, Durability) guarantee reliable database transactions."
+  },
+  {
+    "id": 5,
+    "question": "In Express.js, what is the third argument usually passed to route middleware functions?",
+    "options": ["stop", "next", "continue", "done"],
+    "correctOption": 1,
+    "explanation": "The next() callback function passes control to the subsequent middleware in the request pipeline."
+  },
+  {
+    "id": 6,
+    "question": "Which HTTP status code is returned when a client exceeds rate limits?",
+    "options": ["400 Bad Request", "403 Forbidden", "429 Too Many Requests", "503 Service Unavailable"],
+    "correctOption": 2,
+    "explanation": "HTTP 429 indicates the user has sent too many requests in a given amount of time (rate limited)."
+  }
+]

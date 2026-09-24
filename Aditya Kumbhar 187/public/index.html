@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuizBattle - Live Multiplayer Trivia Arena</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="container">
+    <header class="app-header">
+      <span class="logo-badge">🧠⚡</span>
+      <h1>QuizBattle Arena</h1>
+      <p>High-stakes real-time multiplayer trivia game engine</p>
+    </header>
+
+    <div class="portal-grid">
+      <!-- Player Entry Card -->
+      <div class="card">
+        <div class="card-icon">🎮</div>
+        <h2>Join as Player</h2>
+        <p>Enter the 4-digit PIN displayed on your Host's screen to join the battle.</p>
+        
+        <form action="player.html" method="GET">
+          <div class="form-group">
+            <label for="pin">Game PIN</label>
+            <input type="text" id="pin" name="pin" class="form-control pin-input" placeholder="8421" maxlength="4" required />
+          </div>
+
+          <div class="form-group">
+            <label for="name">Your Nickname</label>
+            <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Karan" maxlength="15" required />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Enter Game</button>
+        </form>
+      </div>
+
+      <!-- Host Entry Card -->
+      <div class="card">
+        <div class="card-icon">👑</div>
+        <h2>Host a Quiz</h2>
+        <p>Create a live room, control questions countdown clocks, and broadcast the leaderboard.</p>
+        
+        <div style="margin-top: 50px;">
+          <a href="host.html" class="btn btn-success btn-block" style="padding: 16px;">
+            <span>🚀 Create New Room</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
