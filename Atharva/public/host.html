@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Host Quiz</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="topbar">
+        <a href="/" class="back">← Home</a>
+        <span id="connection" class="status offline">Connecting...</span>
+      </div>
+
+      <div id="setup">
+        <div class="badge">HOST</div>
+        <h1>Create Quiz</h1>
+
+        <label>Your Name</label>
+        <input id="hostName" placeholder="Enter host name">
+
+        <label>Category</label>
+        <input id="category" value="Technology" placeholder="Quiz category">
+
+        <button class="button full" onclick="createQuiz()">Create Quiz</button>
+        <p id="setupError" class="error"></p>
+      </div>
+
+      <div id="lobby" class="hidden">
+        <div class="badge">QUIZ CREATED</div>
+        <h1>PIN: <span id="pin" class="pin">----</span></h1>
+        <p>Share this PIN with your players.</p>
+
+        <div class="panel">
+          <h2>Players</h2>
+          <div id="players"></div>
+        </div>
+
+        <button id="startButton" class="button full" onclick="startQuiz()">
+          Start Quiz
+        </button>
+        <p id="lobbyError" class="error"></p>
+      </div>
+
+      <div id="quiz" class="hidden">
+        <div class="quiz-head">
+          <span id="questionNumber"></span>
+          <span id="timer" class="timer">15</span>
+        </div>
+
+        <h1 id="question"></h1>
+        <div id="options" class="options"></div>
+
+        <div class="panel">
+          <h2>Leaderboard</h2>
+          <div id="leaderboard"></div>
+        </div>
+      </div>
+
+      <div id="ended" class="hidden center">
+        <div class="badge">FINISHED</div>
+        <h1>🏆 Quiz Complete</h1>
+        <div id="finalLeaderboard"></div>
+        <a href="/host.html" class="button">Create Another Quiz</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://assignment-14-realtime-quiz-platform-1-e30g.onrender.com/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io(
+  "https://assignment-14-realtime-quiz-platform-1-e30g.onrender.com",
+  {
+    transports: ["websocket", "polling"]
+  }
+);
+
+    let quizPin = "";
+    let timerInterval = null;
+    let timerEnd = 0;
+
+    const setup = document.getElementById("setup");
+    const lobby = document.getElementById("lobby");
+    const quiz = document.getElementById("quiz");
+    const ended = document.getElementById("ended");
+    const connection = document.getElementById("connection");
+
+    socket.on("connect", () => {
+      connection.textContent = "Connected";
+      connection.className = "status online";
+    });
+
+    socket.on("disconnect", () => {
+      connection.textContent = "Disconnected";
+      connection.className = "status offline";
+    });
+
+    function showError(id, message) {
+      document.getElementById(id).textContent = message;
+    }
+
+    function createQuiz() {
+      showError("setupError", "");
+
+      const hostName =
+        document.getElementById("hostName").value.trim();
+
+      const category =
+        document.getElementById("category").value.trim();
+
+      if (!hostName) {
+        showError("setupError", "Enter your name.");
+        return;
+      }
+
+      socket.emit("quiz:create", {
+        hostName,
+        category
+      });
+    }
+
+    socket.on("quiz:created", (data) => {
+      quizPin = data.pin;
+
+      document.getElementById("pin").textContent = quizPin;
+
+      setup.classList.add("hidden");
+      lobby.classList.remove("hidden");
+    });
+
+    socket.on("lobby:update", (data) => {
+      const container = document.getElementById("players");
+
+      if (!data.players || data.players.length === 0) {
+        container.innerHTML = "<p>No players yet.</p>";
+        return;
+      }
+
+      container.innerHTML = data.players
+        .map(
+          (player) =>
+            `<div class="player-row">
+              <span>${escapeHtml(player.name)}</span>
+              <strong>${player.score}</strong>
+            </div>`
+        )
+        .join("");
+    });
+
+    function startQuiz() {
+      if (!quizPin) return;
+
+      document.getElementById("startButton").disabled = true;
+
+      socket.emit("quiz:start", {
+        pin: quizPin
+      });
+    }
+
+    socket.on("quiz:started", () => {
+      lobby.classList.add("hidden");
+      quiz.classList.remove("hidden");
+    });
+
+    socket.on("question:start", (data) => {
+      document.getElementById("questionNumber").textContent =
+        `Question ${data.questionIndex + 1} / ${data.totalQuestions}`;
+
+      document.getElementById("question").textContent =
+        data.question;
+
+      document.getElementById("options").innerHTML =
+        data.options
+          .map(
+            (option, index) =>
+              `<div class="option">
+                <span>${String.fromCharCode(65 + index)}</span>
+                ${escapeHtml(option)}
+              </div>`
+          )
+          .join("");
+
+      startTimer(data.timeLimit);
+    });
+
+    function startTimer(duration) {
+      clearInterval(timerInterval);
+
+      timerEnd = Date.now() + duration;
+
+      updateTimer();
+
+      timerInterval = setInterval(updateTimer, 100);
+    }
+
+    function updateTimer() {
+      const remaining =
+        Math.max(0, timerEnd - Date.now());
+
+      document.getElementById("timer").textContent =
+        Math.ceil(remaining / 1000);
+
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+      }
+    }
+
+    socket.on("question:time_up", (data) => {
+      clearInterval(timerInterval);
+
+      const options =
+        document.querySelectorAll(".option");
+
+      options.forEach((option, index) => {
+        if (index === data.correctOption) {
+          option.classList.add("correct");
+        }
+      });
+    });
+
+    socket.on("leaderboard:update", (data) => {
+      renderLeaderboard(
+        "leaderboard",
+        data.players || []
+      );
+    });
+
+    socket.on("quiz:ended", (data) => {
+      clearInterval(timerInterval);
+
+      quiz.classList.add("hidden");
+      ended.classList.remove("hidden");
+
+      renderLeaderboard(
+        "finalLeaderboard",
+        data.leaderboard || []
+      );
+    });
+
+    socket.on("quiz:error", (data) => {
+      showError("setupError", data.message || "Something went wrong.");
+      showError("lobbyError", data.message || "Something went wrong.");
+      document.getElementById("startButton").disabled = false;
+    });
+
+    socket.on("error:message", (message) => {
+      showError("setupError", message);
+      showError("lobbyError", message);
+      document.getElementById("startButton").disabled = false;
+    });
+
+    function renderLeaderboard(id, players) {
+      const container = document.getElementById(id);
+
+      if (!players.length) {
+        container.innerHTML = "<p>No scores yet.</p>";
+        return;
+      }
+
+      container.innerHTML = players
+        .map(
+          (player, index) =>
+            `<div class="player-row">
+              <span>#${index + 1} ${escapeHtml(player.name)}</span>
+              <strong>${player.score}</strong>
+            </div>`
+        )
+        .join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>

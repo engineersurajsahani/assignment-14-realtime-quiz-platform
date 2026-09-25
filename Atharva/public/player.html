@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Quiz</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="topbar">
+        <a href="/" class="back">← Home</a>
+        <span id="connection" class="status offline">Connecting...</span>
+      </div>
+
+      <div id="joinScreen">
+        <div class="badge">PLAYER</div>
+        <h1>Join Quiz</h1>
+
+        <label>Quiz PIN</label>
+        <input id="pinInput" maxlength="4" inputmode="numeric" placeholder="4-digit PIN">
+
+        <label>Your Name</label>
+        <input id="nameInput" placeholder="Enter your name">
+
+        <button class="button full" onclick="joinQuiz()">Join Quiz</button>
+        <p id="joinError" class="error"></p>
+      </div>
+
+      <div id="lobby" class="hidden center">
+        <div class="badge">JOINED</div>
+        <h1>Waiting for Host</h1>
+        <p>PIN: <strong id="joinedPin"></strong></p>
+        <div class="loader"></div>
+        <p>Stay on this page. The quiz will start automatically.</p>
+      </div>
+
+      <div id="quiz" class="hidden">
+        <div class="quiz-head">
+          <span id="questionNumber"></span>
+          <span id="timer" class="timer">15</span>
+        </div>
+
+        <h1 id="question"></h1>
+        <div id="options" class="options"></div>
+
+        <div class="score-box">
+          Score: <strong id="score">0</strong>
+        </div>
+
+        <p id="answerMessage"></p>
+      </div>
+
+      <div id="ended" class="hidden center">
+        <div class="badge">FINISHED</div>
+        <h1>🏆 Quiz Complete</h1>
+        <div id="finalLeaderboard"></div>
+        <a href="/player.html" class="button">Play Again</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://assignment-14-realtime-quiz-platform-1-e30g.onrender.com/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io(
+  "https://assignment-14-realtime-quiz-platform-1-e30g.onrender.com",
+  {
+    transports: ["websocket", "polling"]
+  }
+);
+
+    let quizPin = "";
+    let questionStartTime = 0;
+    let timerInterval = null;
+    let currentScore = 0;
+    let hasAnswered = false;
+
+    const joinScreen = document.getElementById("joinScreen");
+    const lobby = document.getElementById("lobby");
+    const quiz = document.getElementById("quiz");
+    const ended = document.getElementById("ended");
+    const connection = document.getElementById("connection");
+
+    socket.on("connect", () => {
+      connection.textContent = "Connected";
+      connection.className = "status online";
+    });
+
+    socket.on("disconnect", () => {
+      connection.textContent = "Disconnected";
+      connection.className = "status offline";
+    });
+
+    function joinQuiz() {
+      const pin =
+        document.getElementById("pinInput").value.trim();
+
+      const playerName =
+        document.getElementById("nameInput").value.trim();
+
+      document.getElementById("joinError").textContent = "";
+
+      if (!/^\d{4}$/.test(pin)) {
+        document.getElementById("joinError").textContent =
+          "Enter a valid 4-digit PIN.";
+        return;
+      }
+
+      if (!playerName) {
+        document.getElementById("joinError").textContent =
+          "Enter your name.";
+        return;
+      }
+
+      socket.emit("quiz:join", {
+        pin,
+        playerName
+      });
+    }
+
+    socket.on("quiz:joined", (data) => {
+      quizPin = data.pin;
+
+      document.getElementById("joinedPin").textContent =
+        quizPin;
+
+      joinScreen.classList.add("hidden");
+      lobby.classList.remove("hidden");
+    });
+
+    socket.on("quiz:started", () => {
+      lobby.classList.add("hidden");
+      quiz.classList.remove("hidden");
+    });
+
+    socket.on("question:start", (data) => {
+      hasAnswered = false;
+      questionStartTime = Date.now();
+
+      document.getElementById("questionNumber").textContent =
+        `Question ${data.questionIndex + 1} / ${data.totalQuestions}`;
+
+      document.getElementById("question").textContent =
+        data.question;
+
+      document.getElementById("answerMessage").textContent = "";
+
+      const options =
+        document.getElementById("options");
+
+      options.innerHTML =
+        data.options
+          .map(
+            (option, index) =>
+              `<button
+                class="option answer-option"
+                onclick="submitAnswer(${index})"
+              >
+                <span>${String.fromCharCode(65 + index)}</span>
+                ${escapeHtml(option)}
+              </button>`
+          )
+          .join("");
+
+      startTimer(data.timeLimit);
+    });
+
+    function startTimer(duration) {
+      clearInterval(timerInterval);
+
+      const endTime =
+        Date.now() + duration;
+
+      updateTimer(endTime);
+
+      timerInterval =
+        setInterval(() => {
+          updateTimer(endTime);
+        }, 100);
+    }
+
+    function updateTimer(endTime) {
+      const remaining =
+        Math.max(0, endTime - Date.now());
+
+      document.getElementById("timer").textContent =
+        Math.ceil(remaining / 1000);
+
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        disableOptions();
+      }
+    }
+
+    function submitAnswer(selectedOption) {
+      if (hasAnswered) return;
+
+      hasAnswered = true;
+
+      disableOptions();
+
+      const timeTakenMs =
+        Date.now() - questionStartTime;
+
+      socket.emit("answer:submit", {
+        pin: quizPin,
+        selectedOption,
+        timeTakenMs
+      });
+    }
+
+    function disableOptions() {
+      document
+        .querySelectorAll(".answer-option")
+        .forEach((button) => {
+          button.disabled = true;
+        });
+    }
+
+    socket.on("answer:result", (data) => {
+      if (!data.success) {
+        document.getElementById("answerMessage").textContent =
+          data.message;
+        return;
+      }
+
+      currentScore = data.totalScore;
+
+      document.getElementById("score").textContent =
+        currentScore;
+
+      document.getElementById("answerMessage").textContent =
+        data.correct
+          ? `Correct! +${data.score} points`
+          : "Wrong answer. +0 points";
+    });
+
+    socket.on("question:time_up", (data) => {
+      clearInterval(timerInterval);
+
+      const options =
+        document.querySelectorAll(".answer-option");
+
+      options.forEach((button, index) => {
+        if (index === data.correctOption) {
+          button.classList.add("correct");
+        }
+      });
+
+      document.getElementById("answerMessage").textContent =
+        `Correct answer: ${data.explanation}`;
+    });
+
+    socket.on("quiz:ended", (data) => {
+      clearInterval(timerInterval);
+
+      quiz.classList.add("hidden");
+      ended.classList.remove("hidden");
+
+      renderLeaderboard(
+        data.leaderboard || []
+      );
+    });
+
+    socket.on("quiz:error", (data) => {
+      document.getElementById("joinError").textContent =
+        data.message || "Something went wrong.";
+    });
+
+    socket.on("error:message", (message) => {
+      document.getElementById("joinError").textContent =
+        message;
+    });
+
+    function renderLeaderboard(players) {
+      const container =
+        document.getElementById("finalLeaderboard");
+
+      container.innerHTML =
+        players
+          .map(
+            (player, index) =>
+              `<div class="player-row">
+                <span>#${index + 1} ${escapeHtml(player.name)}</span>
+                <strong>${player.score}</strong>
+              </div>`
+          )
+          .join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
