@@ -1,0 +1,63 @@
+[
+  {
+    "category": "Tech",
+    "question": "What is Node.js runtime based on?",
+    "options": ["V8", "SpiderMonkey", "Chakra", "JVM"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google Chrome's V8 JavaScript engine."
+  },
+  {
+    "category": "Tech",
+    "question": "Which protocol does Socket.io use under the hood for real-time transport by default?",
+    "options": ["FTP", "WebSocket", "SMTP", "HTTP/1.0 only"],
+    "correctOption": 1,
+    "explanation": "Socket.io prefers WebSocket transport and falls back to HTTP long-polling."
+  },
+  {
+    "category": "Tech",
+    "question": "In Express.js, which method is used to serve static files?",
+    "options": ["express.render()", "express.static()", "express.files()", "express.public()"],
+    "correctOption": 1,
+    "explanation": "express.static() is the built-in middleware for serving static assets."
+  },
+  {
+    "category": "Tech",
+    "question": "What does CORS stand for?",
+    "options": [
+      "Cross-Origin Resource Sharing",
+      "Client Origin Request Security",
+      "Cross-Object Rendering Service",
+      "Central Origin Routing System"
+    ],
+    "correctOption": 0,
+    "explanation": "CORS stands for Cross-Origin Resource Sharing, a browser security mechanism."
+  },
+  {
+    "category": "Tech",
+    "question": "Which npm package is commonly used to auto-restart a Node.js server during development?",
+    "options": ["forever", "nodemon", "pm2-dev", "supervisor-js"],
+    "correctOption": 1,
+    "explanation": "nodemon watches file changes and automatically restarts the server."
+  },
+  {
+    "category": "Tech",
+    "question": "In this quiz architecture, where is the authoritative game state kept?",
+    "options": ["Player's browser", "Host's browser", "Server (in-memory)", "A CDN edge node"],
+    "correctOption": 2,
+    "explanation": "The server holds authoritative in-memory state to prevent client-side cheating."
+  },
+  {
+    "category": "Tech",
+    "question": "Which event in this quiz protocol is emitted from the server to reveal the correct answer?",
+    "options": ["question:start", "answer:submit", "question:time_up", "quiz:ended"],
+    "correctOption": 2,
+    "explanation": "question:time_up is broadcast by the server once the timer expires."
+  },
+  {
+    "category": "Tech",
+    "question": "What is the maximum base score awarded for a correct answer before the speed bonus?",
+    "options": ["1000", "500", "250", "100"],
+    "correctOption": 1,
+    "explanation": "The base score is 500 points, with up to 500 additional speed-bonus points."
+  }
+]

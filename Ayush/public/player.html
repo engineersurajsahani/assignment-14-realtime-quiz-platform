@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quiz Battle | Player</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="card" id="app">
+
+    
+    <section id="join-view">
+      <h1>🎮 Join Quiz</h1>
+      <p class="subtitle">Enter the PIN shared by your host.</p>
+      <input id="pinInput" placeholder="4-digit PIN" maxlength="4" inputmode="numeric" />
+      <input id="nameInput" placeholder="Your name" />
+      <button id="joinBtn">Join Lobby</button>
+      <p class="status-msg" id="joinStatus"></p>
+    </section>
+
+    
+    <section id="waiting-view" class="hidden">
+      <h1 class="center">You're in! 🙌</h1>
+      <p class="subtitle center" id="waitingText">Waiting for host to start the game…</p>
+      <ul class="player-list" id="playerList"></ul>
+    </section>
+
+    
+    <section id="question-view" class="hidden">
+      <div class="timer" id="timer">15</div>
+      <p class="small center" id="questionMeta"></p>
+      <p class="question-text" id="questionText"></p>
+      <div class="options-grid" id="optionsGrid"></div>
+      <p class="status-msg" id="answerStatus"></p>
+    </section>
+
+    
+    <section id="leaderboard-view" class="hidden">
+      <h1>🏆 Leaderboard</h1>
+      <ul class="leaderboard-list" id="leaderboardList"></ul>
+    </section>
+
+    
+    <section id="final-view" class="hidden">
+      <h1 class="center">🎉 Quiz Over!</h1>
+      <p class="center" style="font-size:1.4rem;" id="winnerText"></p>
+      <ul class="leaderboard-list" id="finalList"></ul>
+      <a href="player.html"><button style="margin-top:16px;">Join Another Quiz</button></a>
+    </section>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    let currentPin = null;
+    let questionStartedAt = null;
+    let hasAnswered = false;
+    let timerInterval = null;
+
+    const views = {
+      join: document.getElementById("join-view"),
+      waiting: document.getElementById("waiting-view"),
+      question: document.getElementById("question-view"),
+      leaderboard: document.getElementById("leaderboard-view"),
+      final: document.getElementById("final-view"),
+    };
+    function showView(name) {
+      Object.values(views).forEach(v => v.classList.add("hidden"));
+      views[name].classList.remove("hidden");
+    }
+
+    document.getElementById("joinBtn").addEventListener("click", () => {
+      const pin = document.getElementById("pinInput").value.trim();
+      const playerName = document.getElementById("nameInput").value.trim();
+      if (!pin || !playerName) {
+        document.getElementById("joinStatus").textContent = "Enter both PIN and name.";
+        return;
+      }
+      currentPin = pin;
+      socket.emit("quiz:join", { pin, playerName });
+    });
+
+    socket.on("quiz:joined", () => {
+      showView("waiting");
+    });
+
+    socket.on("error:join", ({ message }) => {
+      document.getElementById("joinStatus").textContent = message;
+    });
+
+    socket.on("lobby:update", ({ players }) => {
+      if (!views.waiting.classList.contains("hidden") || views.join.classList.contains("hidden") === false) {
+        const list = document.getElementById("playerList");
+        list.innerHTML = "";
+        players.forEach(p => {
+          const li = document.createElement("li");
+          li.innerHTML = `<span>${p.name}</span><span>${p.score} pts</span>`;
+          list.appendChild(li);
+        });
+      }
+    });
+
+    socket.on("question:start", ({ questionIndex, totalQuestions, question, options, timeLimitSeconds }) => {
+      showView("question");
+      hasAnswered = false;
+      questionStartedAt = Date.now();
+      document.getElementById("answerStatus").textContent = "";
+      document.getElementById("questionMeta").textContent = `Question ${questionIndex} / ${totalQuestions}`;
+      document.getElementById("questionText").textContent = question;
+
+      const grid = document.getElementById("optionsGrid");
+      grid.innerHTML = "";
+      options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = `opt-btn opt-${i}`;
+        btn.textContent = opt;
+        btn.disabled = false;
+        btn.addEventListener("click", () => submitAnswer(i, btn));
+        grid.appendChild(btn);
+      });
+
+      let remaining = timeLimitSeconds;
+      const timerEl = document.getElementById("timer");
+      timerEl.textContent = remaining;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        remaining -= 1;
+        timerEl.textContent = Math.max(remaining, 0);
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          document.querySelectorAll(".opt-btn").forEach(b => b.disabled = true);
+        }
+      }, 1000);
+    });
+
+    function submitAnswer(selectedOption, btnEl) {
+      if (hasAnswered) return;
+      hasAnswered = true;
+      const timeTakenMs = Date.now() - questionStartedAt;
+
+      document.querySelectorAll(".opt-btn").forEach(b => b.disabled = true);
+      btnEl.style.outline = "3px solid #fff";
+      document.getElementById("answerStatus").textContent = "Answer locked in!";
+
+      socket.emit("answer:submit", { pin: currentPin, selectedOption, timeTakenMs });
+    }
+
+    socket.on("answer:result", ({ isCorrect, points }) => {
+      document.getElementById("answerStatus").textContent = isCorrect
+        ? `✅ Correct! +${points} pts`
+        : "❌ Incorrect";
+    });
+
+    socket.on("question:time_up", ({ correctOption }) => {
+      clearInterval(timerInterval);
+      const buttons = document.querySelectorAll(".opt-btn");
+      buttons.forEach((btn, i) => {
+        btn.disabled = true;
+        btn.classList.add(i === correctOption ? "correct" : "wrong");
+      });
+      if (!hasAnswered) {
+        document.getElementById("answerStatus").textContent = "⏱️ Time's up — no answer submitted.";
+      }
+    });
+
+    socket.on("leaderboard:update", ({ leaderboard }) => {
+      setTimeout(() => {
+        showView("leaderboard");
+        const list = document.getElementById("leaderboardList");
+        list.innerHTML = "";
+        leaderboard.forEach(p => {
+          const li = document.createElement("li");
+          li.className = p.rank === 1 ? "rank-1" : "";
+          li.innerHTML = `<span>#${p.rank} ${p.name}</span><span>${p.score} pts</span>`;
+          list.appendChild(li);
+        });
+      }, 1500);
+    });
+
+    socket.on("quiz:ended", ({ winner, finalRanks }) => {
+      showView("final");
+      document.getElementById("winnerText").textContent = winner
+        ? `Winner: ${winner.name} with ${winner.score} pts! 🥇`
+        : "No players finished the quiz.";
+      const list = document.getElementById("finalList");
+      list.innerHTML = "";
+      finalRanks.forEach(p => {
+        const li = document.createElement("li");
+        li.className = p.rank === 1 ? "rank-1" : "";
+        li.innerHTML = `<span>#${p.rank} ${p.name}</span><span>${p.score} pts</span>`;
+        list.appendChild(li);
+      });
+    });
+
+    socket.on("quiz:host_left", ({ message }) => {
+      alert(message);
+      window.location.href = "player.html";
+    });
+  </script>
+</body>
+</html>

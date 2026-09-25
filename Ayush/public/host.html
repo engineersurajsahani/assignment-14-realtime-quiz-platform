@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quiz Battle | Host</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="card" id="app">
+
+    
+    <section id="setup-view">
+      <h1>🎤 Host Control</h1>
+      <p class="subtitle">Create a quiz room and manage the live battle.</p>
+      <input id="hostName" placeholder="Your name (e.g. Professor X)" />
+      <input id="category" placeholder="Category (e.g. Tech) — optional" />
+      <button id="createBtn">Create Quiz Room</button>
+      <p class="status-msg" id="setupStatus"></p>
+    </section>
+
+    
+    <section id="lobby-view" class="hidden">
+      <h1>Lobby</h1>
+      <p class="subtitle">Share this PIN with players</p>
+      <div class="pin-display" id="pinDisplay">----</div>
+      <ul class="player-list" id="playerList"></ul>
+      <button id="startBtn" disabled>Start Game</button>
+      <p class="status-msg" id="lobbyStatus">Waiting for players to join…</p>
+    </section>
+
+    
+    <section id="question-view" class="hidden">
+      <div class="timer" id="timer">15</div>
+      <p class="small center" id="questionMeta"></p>
+      <p class="question-text" id="questionText"></p>
+      <div class="options-grid" id="optionsGrid"></div>
+    </section>
+
+    
+    <section id="leaderboard-view" class="hidden">
+      <h1>🏆 Leaderboard</h1>
+      <ul class="leaderboard-list" id="leaderboardList"></ul>
+      <p class="status-msg">Next question coming up…</p>
+    </section>
+
+    
+    <section id="final-view" class="hidden">
+      <h1 class="center">🎉 Quiz Over!</h1>
+      <p class="center" style="font-size:1.4rem;" id="winnerText"></p>
+      <ul class="leaderboard-list" id="finalList"></ul>
+      <a href="host.html"><button style="margin-top:16px;">Host a New Quiz</button></a>
+    </section>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    let currentPin = null;
+    let timerInterval = null;
+
+    const views = {
+      setup: document.getElementById("setup-view"),
+      lobby: document.getElementById("lobby-view"),
+      question: document.getElementById("question-view"),
+      leaderboard: document.getElementById("leaderboard-view"),
+      final: document.getElementById("final-view"),
+    };
+    function showView(name) {
+      Object.values(views).forEach(v => v.classList.add("hidden"));
+      views[name].classList.remove("hidden");
+    }
+
+    document.getElementById("createBtn").addEventListener("click", () => {
+      const hostName = document.getElementById("hostName").value.trim() || "Host";
+      const category = document.getElementById("category").value.trim();
+      socket.emit("quiz:create", { hostName, category });
+    });
+
+    socket.on("quiz:created", ({ pin }) => {
+      currentPin = pin;
+      document.getElementById("pinDisplay").textContent = pin;
+      showView("lobby");
+    });
+
+    socket.on("lobby:update", ({ players }) => {
+      const list = document.getElementById("playerList");
+      list.innerHTML = "";
+      players.forEach(p => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span>${p.name}</span><span>${p.score} pts</span>`;
+        list.appendChild(li);
+      });
+      document.getElementById("startBtn").disabled = players.length === 0;
+      document.getElementById("lobbyStatus").textContent =
+        players.length === 0 ? "Waiting for players to join…" : `${players.length} player(s) ready`;
+    });
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      socket.emit("quiz:start", { pin: currentPin });
+    });
+
+    socket.on("question:start", ({ questionIndex, totalQuestions, question, options, timeLimitSeconds }) => {
+      showView("question");
+      document.getElementById("questionMeta").textContent = `Question ${questionIndex} / ${totalQuestions}`;
+      document.getElementById("questionText").textContent = question;
+
+      const grid = document.getElementById("optionsGrid");
+      grid.innerHTML = "";
+      options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = `opt-btn opt-${i}`;
+        btn.textContent = opt;
+        btn.disabled = true; // host is a spectator for answering
+        grid.appendChild(btn);
+      });
+
+      let remaining = timeLimitSeconds;
+      const timerEl = document.getElementById("timer");
+      timerEl.textContent = remaining;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        remaining -= 1;
+        timerEl.textContent = Math.max(remaining, 0);
+        if (remaining <= 0) clearInterval(timerInterval);
+      }, 1000);
+    });
+
+    socket.on("question:time_up", ({ correctOption }) => {
+      clearInterval(timerInterval);
+      const buttons = document.querySelectorAll(".opt-btn");
+      buttons.forEach((btn, i) => {
+        btn.classList.add(i === correctOption ? "correct" : "wrong");
+      });
+    });
+
+    socket.on("leaderboard:update", ({ leaderboard }) => {
+      setTimeout(() => {
+        showView("leaderboard");
+        const list = document.getElementById("leaderboardList");
+        list.innerHTML = "";
+        leaderboard.forEach(p => {
+          const li = document.createElement("li");
+          li.className = p.rank === 1 ? "rank-1" : "";
+          li.innerHTML = `<span>#${p.rank} ${p.name}</span><span>${p.score} pts</span>`;
+          list.appendChild(li);
+        });
+      }, 1500);
+    });
+
+    socket.on("quiz:ended", ({ winner, finalRanks }) => {
+      showView("final");
+      document.getElementById("winnerText").textContent = winner
+        ? `Winner: ${winner.name} with ${winner.score} pts! 🥇`
+        : "No players finished the quiz.";
+      const list = document.getElementById("finalList");
+      list.innerHTML = "";
+      finalRanks.forEach(p => {
+        const li = document.createElement("li");
+        li.className = p.rank === 1 ? "rank-1" : "";
+        li.innerHTML = `<span>#${p.rank} ${p.name}</span><span>${p.score} pts</span>`;
+        list.appendChild(li);
+      });
+    });
+
+    socket.on("error:join", ({ message }) => {
+      document.getElementById("setupStatus").textContent = message;
+    });
+  </script>
+</body>
+</html>
