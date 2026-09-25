@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "question": "What is Node.js runtime based on?",
+    "options": ["V8", "SpiderMonkey", "Chakra", "JVM"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google Chrome's V8 JavaScript engine.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 2,
+    "question": "Which protocol does Socket.io use for real-time bidirectional communication?",
+    "options": ["HTTP/2", "WebSockets / HTTP Long-Polling", "gRPC", "SMTP"],
+    "correctOption": 1,
+    "explanation": "Socket.io primarily uses WebSockets with fallback to HTTP Long-Polling.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 3,
+    "question": "What does CORS stand for in web development?",
+    "options": [
+      "Cross-Origin Resource Sharing",
+      "Centralized Origin Request Service",
+      "Client-Oriented Routing System",
+      "Core Object Reference Storage"
+    ],
+    "correctOption": 0,
+    "explanation": "CORS stands for Cross-Origin Resource Sharing.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 4,
+    "question": "Which command is used to start a Node.js project and generate package.json?",
+    "options": ["npm start", "npm init -y", "node init", "npm install"],
+    "correctOption": 1,
+    "explanation": "npm init -y initializes a Node package with default settings.",
+    "timeLimitSeconds": 15
+  },
+  {
+    "id": 5,
+    "question": "In Express.js, what parameter represents the response object in middleware?",
+    "options": ["req", "res", "next", "err"],
+    "correctOption": 1,
+    "explanation": "In Express callback signatures (req, res, next), 'res' represents the response object.",
+    "timeLimitSeconds": 15
+  }
+]

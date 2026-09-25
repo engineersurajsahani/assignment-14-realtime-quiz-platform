@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Player Controller</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .player-container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .card-dark {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 1.8rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Kahoot Style 4-Color Answer Buttons Grid */
+    .answer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .btn-answer {
+      height: 130px;
+      border: none;
+      border-radius: 16px;
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 800;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+      transition: transform 0.15s ease, opacity 0.2s ease;
+      cursor: pointer;
+    }
+    .btn-answer:active {
+      transform: scale(0.95);
+    }
+    .btn-answer:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .btn-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .btn-yellow { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .btn-green { background: linear-gradient(135deg, #10b981, #16a34a); }
+
+    .timer-pill {
+      background: #38bdf8;
+      color: #0f172a;
+      font-weight: 900;
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-size: 1.2rem;
+    }
+    .status-banner {
+      background: #334155;
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="player-container">
+
+    <!-- STEP 1: JOIN FORM -->
+    <div id="section-join" class="card-dark text-center">
+      <h2 class="fw-bold mb-3"><i class="fa-solid fa-gamepad text-success me-2"></i>Join Quiz Battle</h2>
+      <div id="join-error" class="alert alert-danger d-none py-2 text-start small"></div>
+      
+      <div class="mb-3 text-start">
+        <label class="form-label font-weight-bold">Game PIN</label>
+        <input type="text" id="input-pin" class="form-control form-control-lg bg-dark text-white text-center fs-2 fw-bold border-secondary" placeholder="4-Digit PIN" maxlength="4">
+      </div>
+      <div class="mb-4 text-start">
+        <label class="form-label">Player Nickname</label>
+        <input type="text" id="input-player-name" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Enter your name">
+      </div>
+      <button id="btn-join" class="btn btn-success btn-lg w-100 py-3 fw-bold rounded-3">
+        Enter Arena <i class="fa-solid fa-arrow-right ms-2"></i>
+      </button>
+    </div>
+
+    <!-- STEP 2: LOBBY WAITING SCREEN -->
+    <div id="section-waiting" class="card-dark text-center d-none">
+      <div class="mb-3">
+        <div class="spinner-grow text-success" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      <h3 class="fw-bold mb-2">You're in!</h3>
+      <p class="fs-5 text-secondary">Player: <strong class="text-white" id="player-display-name">---</strong></p>
+      <div class="status-banner mt-3 text-info">
+        <i class="fa-solid fa-clock me-2"></i>Waiting for Host to start the quiz...
+      </div>
+    </div>
+
+    <!-- STEP 3: ACTIVE QUESTION GAMEPAD -->
+    <div id="section-gamepad" class="card-dark d-none">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="badge bg-secondary fs-6" id="player-question-num">Q 1/5</span>
+        <span class="timer-pill" id="player-timer">15s</span>
+      </div>
+
+      <div class="text-center mb-3">
+        <h4 id="player-question-text" class="fw-bold mb-0">What is Node.js runtime based on?</h4>
+      </div>
+
+      <div class="answer-grid" id="player-answer-grid">
+        <button class="btn-answer btn-red" data-opt="0">
+          <i class="fa-solid fa-triangle"></i>
+          <span class="opt-label" id="p-opt-0">A</span>
+        </button>
+        <button class="btn-answer btn-blue" data-opt="1">
+          <i class="fa-solid fa-diamond"></i>
+          <span class="opt-label" id="p-opt-1">B</span>
+        </button>
+        <button class="btn-answer btn-yellow" data-opt="2">
+          <i class="fa-solid fa-circle"></i>
+          <span class="opt-label" id="p-opt-2">C</span>
+        </button>
+        <button class="btn-answer btn-green" data-opt="3">
+          <i class="fa-solid fa-square"></i>
+          <span class="opt-label" id="p-opt-3">D</span>
+        </button>
+      </div>
+
+      <!-- FEEDBACK AREA -->
+      <div id="player-feedback" class="mt-3 text-center d-none">
+        <div id="feedback-alert" class="alert p-3 mb-0 fw-bold fs-5">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: FINAL GAME OVER SCREEN -->
+    <div id="section-final" class="card-dark text-center d-none">
+      <h2 class="fw-bold mb-2">Quiz Finished!</h2>
+      <div class="my-4">
+        <i class="fa-solid fa-medal display-1 text-warning mb-3"></i>
+        <h4 id="player-final-rank" class="fw-bold text-info">Your Rank: #1</h4>
+        <h3 id="player-final-score" class="fw-bold text-success">Score: 4850 pts</h3>
+      </div>
+      <a href="/player.html" class="btn btn-outline-light btn-lg w-100">Play Again</a>
+    </div>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

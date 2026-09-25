@@ -1,8 +1,9 @@
 # 🧠 Assignment 14: Real-Time Multiplayer Live Quiz Battle (Socket.io)
 > **Track:** Backend & Real-Time Web | **Level:** Advanced | **Estimated Time:** 7–9 Hours  
 > **Tech Stack:** Node.js, Express.js, Socket.io, In-Memory Game State Engine, CORS
-
 ---
+
+DEPLOYED: https://assignment-14-realtime-quiz-platform-jti6.onrender.com/
 
 ## 📌 1. Objective & Overview
 
