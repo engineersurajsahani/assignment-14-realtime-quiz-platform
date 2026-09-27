@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz Battle - Host</title>
+  <style>
+    body { font-family: sans-serif; background: #2c3e50; color: white; padding: 20px; text-align: center; }
+    button { padding: 10px 20px; font-size: 18px; cursor: pointer; background: #27ae60; color: white; border: none; border-radius: 5px; }
+    #questionArea, #leaderboardArea { display: none; margin-top: 30px; }
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 600px; margin: 20px auto; }
+    .option { padding: 20px; background: #34495e; font-size: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Host Dashboard</h1>
+  
+  <div id="lobby">
+    <button id="createBtn">Create Quiz</button>
+    <div id="pinDisplay" style="margin-top: 20px; font-size: 24px;"></div>
+    <h2>Players:</h2>
+    <ul id="playerList" style="list-style: none; padding: 0;"></ul>
+    <button id="startBtn" style="display: none; margin-top: 20px;">Start Game</button>
+  </div>
+
+  <div id="questionArea">
+    <h2 id="questionText"></h2>
+    <div class="options" id="optionsGrid"></div>
+    <div id="timerDisplay" style="font-size: 30px; margin-top: 20px; color: #f1c40f;"></div>
+  </div>
+
+  <div id="leaderboardArea">
+    <h2>Leaderboard</h2>
+    <table style="width: 100%; max-width: 400px; margin: 0 auto; text-align: left;">
+      <tbody id="leaderboardBody"></tbody>
+    </table>
+    <div id="explanation" style="margin-top: 20px; color: #e74c3c;"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

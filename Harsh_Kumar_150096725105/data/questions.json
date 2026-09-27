@@ -1,0 +1,20 @@
+[
+  {
+    "question": "What is Node.js runtime based on?",
+    "options": ["V8", "SpiderMonkey", "Chakra", "JVM"],
+    "correctOption": 0,
+    "explanation": "Node.js is built on Google Chrome's V8 engine."
+  },
+  {
+    "question": "Which HTTP method is typically used to update an existing resource completely?",
+    "options": ["GET", "POST", "PUT", "PATCH"],
+    "correctOption": 2,
+    "explanation": "PUT is generally used to replace an entire resource, whereas PATCH is for partial updates."
+  },
+  {
+    "question": "Which of the following is NOT a core module in Node.js?",
+    "options": ["fs", "http", "path", "mongoose"],
+    "correctOption": 3,
+    "explanation": "mongoose is a third-party package for MongoDB, not a core Node module."
+  }
+]

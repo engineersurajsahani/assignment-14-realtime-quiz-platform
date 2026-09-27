@@ -1,0 +1,30 @@
+{
+  "name": "harsh-assignment-14-realtime-quiz-platform",
+  "version": "1.0.0",
+  "description": "> **Track:** Backend & Real-Time Web | **Level:** Advanced | **Estimated Time:** 7–9 Hours   > **Tech Stack:** Node.js, Express.js, Socket.io, In-Memory Game State Engine, CORS",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js", "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harsh4421/Harsh-Assignment-14-Realtime-Quiz-Platform.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/harsh4421/Harsh-Assignment-14-Realtime-Quiz-Platform/issues"
+  },
+  "homepage": "https://github.com/harsh4421/Harsh-Assignment-14-Realtime-Quiz-Platform#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

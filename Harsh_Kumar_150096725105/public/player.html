@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz Battle - Player</title>
+  <style>
+    body { font-family: sans-serif; background: #34495e; color: white; padding: 20px; text-align: center; }
+    input, button { padding: 15px; font-size: 18px; margin: 10px; width: 80%; max-width: 300px; }
+    button { background: #3498db; color: white; border: none; cursor: pointer; border-radius: 5px; }
+    #gameArea, #waitArea { display: none; }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 400px; margin: 20px auto; }
+    .btn-grid button { width: 100%; height: 100px; font-size: 24px; margin: 0; }
+    .c0 { background: #e74c3c; } .c1 { background: #3498db; }
+    .c2 { background: #f1c40f; } .c3 { background: #2ecc71; }
+  </style>
+</head>
+<body>
+  <h1>Player Game Pad</h1>
+  
+  <div id="joinArea">
+    <input type="text" id="pinInput" placeholder="Game PIN">
+    <input type="text" id="nameInput" placeholder="Your Name">
+    <button id="joinBtn">Enter</button>
+  </div>
+
+  <div id="waitArea">
+    <h2>Waiting for host to start...</h2>
+    <div id="scoreDisplay" style="font-size: 24px;"></div>
+  </div>
+
+  <div id="gameArea">
+    <h2 id="playerTimer">15</h2>
+    <div class="btn-grid">
+      <button class="c0" onclick="submitAnswer(0)">A</button>
+      <button class="c1" onclick="submitAnswer(1)">B</button>
+      <button class="c2" onclick="submitAnswer(2)">C</button>
+      <button class="c3" onclick="submitAnswer(3)">D</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
